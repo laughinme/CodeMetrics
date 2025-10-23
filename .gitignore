@@ -214,3 +214,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Custom
+secrets/
+*.DS_Store
+/backend/src/media
+test.py
+/.vscode
