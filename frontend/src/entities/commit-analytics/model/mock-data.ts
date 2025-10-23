@@ -1,7 +1,9 @@
 import {
   type AuthorDatum,
+  type CommitDayKey,
   type CommitTimeRange,
   type DailyCommitsDatum,
+  type HourlyActivityDatum,
   type TimeRangeOption,
 } from "./types"
 
@@ -11,6 +13,26 @@ export const commitTimeRangeOptions: TimeRangeOption[] = [
   { value: "30d", label: "30 дней" },
   { value: "all", label: "Все время" },
 ]
+
+export const commitDayOrder: CommitDayKey[] = [
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+  "sun",
+]
+
+export const commitDayLabels: Record<CommitDayKey, string> = {
+  mon: "Пн",
+  tue: "Вт",
+  wed: "Ср",
+  thu: "Чт",
+  fri: "Пт",
+  sat: "Сб",
+  sun: "Вс",
+}
 
 const authorDataset: Record<CommitTimeRange, AuthorDatum[]> = {
   "1d": [
@@ -81,4 +103,48 @@ export function getMockTopAuthors(
 
 export function getMockDailyCommits(): DailyCommitsDatum[] {
   return [...dailyCommitsDataset]
+}
+
+const hourlyPattern = [
+  0.04, 0.03, 0.025, 0.02, 0.02, 0.03, 0.06, 0.12, 0.18, 0.24, 0.28, 0.32,
+  0.34, 0.33, 0.31, 0.3, 0.27, 0.24, 0.21, 0.18, 0.14, 0.1, 0.07, 0.05,
+]
+
+const dayModifiers: Record<CommitDayKey, number> = {
+  mon: 1,
+  tue: 1.05,
+  wed: 1.12,
+  thu: 1.08,
+  fri: 1.15,
+  sat: 0.82,
+  sun: 0.74,
+}
+
+const rangeBaseIntensity: Record<CommitTimeRange, number> = {
+  "1d": 18,
+  "7d": 85,
+  "30d": 260,
+  all: 520,
+}
+
+export function getMockHourlyActivity(
+  range: CommitTimeRange
+): HourlyActivityDatum[] {
+  const base = rangeBaseIntensity[range]
+
+  if (!base) {
+    return []
+  }
+
+  return commitDayOrder.flatMap<HourlyActivityDatum>((day) => {
+    const modifier = dayModifiers[day]
+    return hourlyPattern.map((hourValue, hour) => ({
+      day,
+      hour,
+      commits: Math.max(
+        0,
+        Math.round(base * modifier * hourValue + (hour % 3) - 1)
+      ),
+    }))
+  })
 }

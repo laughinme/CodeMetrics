@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/shared/components/app-sidebar"
 import { CommitActivityWidget } from "@/widgets/commit-activity"
+import { CommitHourlyHeatmapWidget } from "@/widgets/commit-hourly-heatmap"
 import { CommitTopAuthorsWidget } from "@/widgets/commit-top-authors"
 import { DataTable } from "@/shared/components/data-table"
 import {
@@ -132,6 +133,9 @@ export default function Page() {
                 <div className="@container/card grid gap-4 lg:grid-cols-2">
                   <CommitTopAuthorsWidget />
                   <CommitActivityWidget />
+                </div>
+                <div className="mt-4">
+                  <CommitHourlyHeatmapWidget />
                 </div>
               </div>
             </div>

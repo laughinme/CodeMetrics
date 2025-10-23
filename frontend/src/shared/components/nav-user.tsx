@@ -42,10 +42,10 @@ export function NavUser({
   const auth = useAuth()
   const { isMobile } = useSidebar()
   const displayEmail = auth?.user?.email ?? user.email
-  const authUserName =
-    auth?.user && typeof (auth.user as { name?: unknown }).name === "string"
-      ? (auth.user as { name: string }).name
-      : undefined
+  const authUserName = (() => {
+    const rawName = auth?.user?.name
+    return typeof rawName === "string" ? rawName : undefined
+  })()
   const displayName = authUserName ?? displayEmail ?? user.name
 
   const handleLogout = useCallback(() => {

@@ -136,11 +136,24 @@ export function CommitTopAuthorsChart({
                 <ChartTooltipContent
                   labelKey="author"
                   nameKey="commits"
-                  formatter={(value: number) => (
-                    <span className="font-semibold text-foreground">
-                      {value} коммитов
-                    </span>
-                  )}
+                  formatter={(value) => {
+                    const numericValue =
+                      typeof value === "number"
+                        ? value
+                        : Array.isArray(value)
+                          ? value.reduce<number>(
+                              (total, current) => total + Number(current),
+                              0,
+                            )
+                          : Number(value)
+                    const commits = Number.isFinite(numericValue) ? numericValue : 0
+
+                    return (
+                      <span className="font-semibold text-foreground">
+                        {commits} коммитов
+                      </span>
+                    )
+                  }}
                 />
               }
             />
