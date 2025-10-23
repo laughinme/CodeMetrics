@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import String, Uuid
+from sqlalchemy import DateTime, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..table_base import Base
@@ -17,6 +18,8 @@ class Author(Base):
     git_name: Mapped[str] = mapped_column(String, nullable=False)
     git_email: Mapped[str] = mapped_column(String, nullable=False)
     email_normalized: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    first_commit_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_commit_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     authored_commits: Mapped[list["Commit"]] = relationship(
         back_populates="author",

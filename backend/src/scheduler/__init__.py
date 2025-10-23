@@ -17,15 +17,15 @@ def init_scheduler(api_base_url: str) -> AsyncIOScheduler:
         )
         return scheduler
 
-    # scheduler.add_job(
-    #     func=run_initial_projects_sync,
-    #     trigger="date",
-    #     run_date=datetime.now(UTC) + timedelta(seconds=2),
-    #     id="external-api-initial-sync",
-    #     kwargs={"base_url": api_base_url},
-    #     misfire_grace_time=60,
-    #     coalesce=True,
-    #     max_instances=1,
-    #     replace_existing=True,
-    # )
+    scheduler.add_job(
+        func=run_initial_projects_sync,
+        trigger="date",
+        run_date=datetime.now(UTC) + timedelta(seconds=2),
+        id="external-api-initial-sync",
+        kwargs={"base_url": api_base_url},
+        misfire_grace_time=60,
+        coalesce=True,
+        max_instances=1,
+        replace_existing=True,
+    )
     return scheduler

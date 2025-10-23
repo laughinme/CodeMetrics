@@ -68,10 +68,17 @@ class ExternalAPIClient:
         self,
         path: str,
         *,
+        params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        response = await self._request("GET", path, headers=headers, **kwargs)
+        response = await self._request(
+            "GET",
+            path,
+            headers=headers,
+            params=params,
+            **kwargs,
+        )
         return self._parse_json_response(response)
 
     async def fetch_test_payload(self) -> str:
