@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/shared/components/app-sidebar"
-import { ChartAreaInteractive } from "@/shared/components/chart-area-interactive"
+import { CommitActivityWidget } from "@/widgets/commit-activity"
+import { CommitTopAuthorsWidget } from "@/widgets/commit-top-authors"
 import { DataTable } from "@/shared/components/data-table"
 import {
   SectionCards,
@@ -128,7 +129,10 @@ export default function Page() {
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
               <SectionCards cards={dashboardKpiCards} />
               <div className="px-4 lg:px-6">
-                <ChartAreaInteractive />
+                <div className="@container/card grid gap-4 lg:grid-cols-2">
+                  <CommitTopAuthorsWidget />
+                  <CommitActivityWidget />
+                </div>
               </div>
             </div>
           </div>
