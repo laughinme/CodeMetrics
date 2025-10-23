@@ -50,50 +50,6 @@ class UserService:
             
         await self.uow.session.refresh(user)
 
-    async def add_picture(
-        self,
-        file: UploadFile,
-        user: User
-    ) -> None:
-        folder = Path(settings.MEDIA_DIR, "users", str(user.id))
-        if folder.exists():
-            shutil.rmtree(folder)
-        folder.mkdir(parents=True, exist_ok=True)
-
-        if file.content_type not in ("image/jpeg", "image/png"):
-            raise HTTPException(
-                status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                detail="Only jpg / png allowed"
-            )
-
-        ext  = ".jpg" if file.content_type == "image/jpeg" else ".png"
-        name = f"{uuid4()}{ext}"
-
-        file_path = folder / name
-        limit_bytes = settings.MAX_PHOTO_SIZE * 1024 * 1024
-        written = 0
-        async with aiofiles.open(file_path, "wb") as out:
-            while chunk := await file.read(1024 * 1024):
-                if written + len(chunk) > limit_bytes:
-                    try:
-                        await out.flush()
-                        await out.close()
-                    except Exception:
-                        pass
-                    try:
-                        file_path.unlink(missing_ok=True)
-                    except Exception:
-                        pass
-                    raise HTTPException(
-                        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                        detail=f"File too large. Max {settings.MAX_PHOTO_SIZE} MB"
-                    )
-                await out.write(chunk)
-                written += len(chunk)
-
-        url = f"{settings.SITE_URL}/{settings.MEDIA_DIR}/users/{user.id}/{name}"
-
-        user.profile_pic_url = url
 
     async def admin_list_users(
         self,

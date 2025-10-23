@@ -21,11 +21,7 @@ class Settings(BaseSettings):
     API_HOST: str = '0.0.0.0'
     
     # Site data (url, paths)
-    SITE_URL: str = ''
-    
-    # Media settings
-    MEDIA_DIR: str = 'media'
-    MAX_PHOTO_SIZE: int # in MB
+    SITE_URL: str = 'https://68fa1a1fc0554e6926416ad5--codemetricsproto.netlify.app'
     
     # Auth Settings    
     JWT_PRIVATE_KEY: str
