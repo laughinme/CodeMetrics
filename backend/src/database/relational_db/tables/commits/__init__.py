@@ -1,0 +1,1 @@
+from .commits_table import Commit
