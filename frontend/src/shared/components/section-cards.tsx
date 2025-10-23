@@ -1,102 +1,76 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
+import { Card } from "@/shared/components/ui/card"
 
-import { Badge } from "@/shared/components/ui/badge"
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card"
+type SectionCard = {
+  id: string
+  label: string
+  value: string
+  secondary?: string
+  caption?: string
+  change?: {
+    value: string
+    variant?: "positive" | "negative" | "neutral"
+  }
+}
 
-export function SectionCards() {
+type SectionCardsProps = {
+  cards: SectionCard[]
+}
+
+export function SectionCards({ cards }: SectionCardsProps) {
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Total Revenue</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            $1,250.00
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +12.5%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Trending up this month <IconTrendingUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">
-            Visitors for the last 6 months
-          </div>
-        </CardFooter>
-      </Card>
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>New Customers</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            1,234
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingDown />
-              -20%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Down 20% this period <IconTrendingDown className="size-4" />
-          </div>
-          <div className="text-muted-foreground">
-            Acquisition needs attention
-          </div>
-        </CardFooter>
-      </Card>
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Active Accounts</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            45,678
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +12.5%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Strong user retention <IconTrendingUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Engagement exceed targets</div>
-        </CardFooter>
-      </Card>
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Growth Rate</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            4.5%
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +4.5%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Steady performance increase <IconTrendingUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Meets growth projections</div>
-        </CardFooter>
-      </Card>
+    <div className="grid grid-cols-1 gap-3 px-4 lg:px-6 @lg/main:grid-cols-2 @2xl/main:grid-cols-3 @4xl/main:grid-cols-4 @5xl/main:grid-cols-5">
+      {cards.map(({ id, label, value, secondary, caption, change }) => {
+        const changeVariant =
+          change?.variant === "negative"
+            ? "text-destructive"
+            : change?.variant === "positive"
+              ? "text-emerald-500"
+              : "text-muted-foreground"
+
+        return (
+          <Card
+            key={id}
+            data-slot="card"
+            className="@container/card border-border/60 bg-background/70 dark:bg-background/40 !py-4 rounded-2xl shadow-none"
+          >
+            <div className="flex h-full flex-col justify-between gap-3 px-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {label}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-3xl font-semibold tabular-nums tracking-tight @[250px]/card:text-4xl">
+                  {value}
+                </span>
+                {secondary ? (
+                  <span className="text-xs text-muted-foreground @[250px]/card:text-sm">
+                    {secondary}
+                  </span>
+                ) : null}
+              </div>
+              {change || caption ? (
+                <div className="flex flex-col gap-1">
+                  {change ? (
+                    <span className={`text-sm font-semibold ${changeVariant}`}>
+                      {change.value}
+                    </span>
+                  ) : null}
+                  {caption ? (
+                    <span className="text-xs text-muted-foreground/80 @[250px]/card:text-sm">
+                      {caption}
+                    </span>
+                  ) : null}
+                </div>
+              ) : (
+                <span aria-hidden className="block h-0" />
+              )}
+            </div>
+          </Card>
+        )
+      })}
     </div>
   )
 }
+
+export type { SectionCard, SectionCardsProps }
