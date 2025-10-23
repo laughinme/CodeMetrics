@@ -1,27 +1,37 @@
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi_limiter import FastAPILimiter
 from contextlib import asynccontextmanager
+
+from apscheduler.schedulers.base import STATE_RUNNING
+from fastapi import FastAPI
+from fastapi_limiter import FastAPILimiter
 from starlette.middleware.cors import CORSMiddleware
 
 from api import get_api_routers
 from webhooks import get_webhooks
 from core.config import Settings, configure_logging
 from database.redis import get_redis
-# from scheduler import init_scheduler
+from database.relational_db import wait_for_db
+from scheduler import init_scheduler
 
 
 config = Settings() # pyright: ignore[reportCallIssue]
 configure_logging()
+scheduler = init_scheduler(config.API_URL)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis = get_redis()
     try:
+        await wait_for_db()
+        
+        if scheduler.state != STATE_RUNNING:
+            scheduler.start()
+            
         await FastAPILimiter.init(redis)
         yield
     finally:
         await redis.aclose()
+        if scheduler.state == STATE_RUNNING:
+            scheduler.shutdown()
 
 
 app = FastAPI(
@@ -31,6 +41,7 @@ app = FastAPI(
 )
 
 # Mount static
+# from fastapi.staticfiles import StaticFiles
 # app.mount('/media', StaticFiles(directory=config.MEDIA_DIR, check_dir=False), 'media')
 
 # Including routers

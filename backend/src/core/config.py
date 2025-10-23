@@ -1,7 +1,6 @@
 import logging
 
 from pathlib import Path
-from pydantic import SecretStr
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -21,7 +20,8 @@ class Settings(BaseSettings):
     API_HOST: str = '0.0.0.0'
     
     # Site data (url, paths)
-    SITE_URL: str = 'https://68fa1a1fc0554e6926416ad5--codemetricsproto.netlify.app'
+    SITE_URL: str = ''
+    API_URL: str
     
     # Auth Settings    
     JWT_PRIVATE_KEY: str
