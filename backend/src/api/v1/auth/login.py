@@ -86,7 +86,7 @@ async def logout(
     await svc.logout(token)
     
     if refresh_cookie:
-        response.delete_cookie("refresh_token", samesite="lax")
-        response.delete_cookie("csrf_token", samesite="lax")
+        response.delete_cookie("refresh_token", samesite="none")
+        response.delete_cookie("csrf_token", samesite="none")
         
     return {'message': 'Logged out successfully'}
