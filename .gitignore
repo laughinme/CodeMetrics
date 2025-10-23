@@ -223,3 +223,5 @@ test.py
 
 # Local Netlify folder
 .netlify
+backend/recomends_final.md
+backend/swagger.json

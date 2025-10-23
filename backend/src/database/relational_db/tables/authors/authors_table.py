@@ -1,9 +1,8 @@
-import uuid
-
 from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
-from sqlalchemy import String
-from sqlalchemy.orm import mapped_column, relationship, Mapped
+from sqlalchemy import String, Uuid
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..table_base import Base
 
@@ -13,9 +12,19 @@ if TYPE_CHECKING:
 class Author(Base):
     __tablename__ = "authors"
 
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
 
-    name: Mapped[str] = mapped_column(String, nullable=False)
-    email_normalized: Mapped[str] = mapped_column(String, nullable=False)
+    git_name: Mapped[str] = mapped_column(String, nullable=False)
+    git_email: Mapped[str] = mapped_column(String, nullable=False)
+    email_normalized: Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
-    commits: Mapped[list["Commit"]] = relationship(back_populates="author")
+    authored_commits: Mapped[list["Commit"]] = relationship(
+        back_populates="author",
+        foreign_keys="Commit.author_id",
+        lazy="selectin",
+    )
+    committed_commits: Mapped[list["Commit"]] = relationship(
+        back_populates="committer",
+        foreign_keys="Commit.committer_id",
+        lazy="selectin",
+    )
