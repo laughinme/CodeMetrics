@@ -1,0 +1,1 @@
+from .branches_table import Branch

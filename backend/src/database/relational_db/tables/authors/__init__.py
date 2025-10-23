@@ -1,0 +1,1 @@
+from .authors_table import Author
