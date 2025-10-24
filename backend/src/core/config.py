@@ -16,6 +16,16 @@ class Settings(BaseSettings):
         extra='ignore'
     )
     
+    STAGE: str = 'dev'
+    
+    @property
+    def ECHO_MODE(self) -> bool:
+        return self.STAGE == 'dev'
+    
+    @property
+    def DEBUG_MODE(self) -> bool:
+        return self.STAGE == 'dev'
+    
     # API settings
     API_PORT: int = 8080
     API_HOST: str = '0.0.0.0'

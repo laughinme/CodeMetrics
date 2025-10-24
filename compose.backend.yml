@@ -13,6 +13,8 @@ services:
       SITE_URL: https://localhost
       DATABASE_URL: postgresql+asyncpg://postgres:secret@db:5432/hackathon
       REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -20,21 +22,21 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  nginx:
-    build:
-      context: .
-      dockerfile: nginx/Dockerfile
-      args:
-        VITE_API_BASE_URL: https://localhost
-        VITE_ENABLE_HTTPS: "false"
-    container_name: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      backend:
-        condition: service_started
-    restart: unless-stopped
+  # nginx:
+  #   build:
+  #     context: .
+  #     dockerfile: nginx/Dockerfile
+  #     args:
+  #       VITE_API_BASE_URL: https://localhost
+  #       VITE_ENABLE_HTTPS: "false"
+  #   container_name: nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   depends_on:
+  #     backend:
+  #       condition: service_started
+  #   restart: unless-stopped
 
   db:
     image: postgres:16-alpine
