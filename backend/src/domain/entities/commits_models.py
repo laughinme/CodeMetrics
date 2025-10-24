@@ -8,23 +8,23 @@ from .commons import RepoRef, AuthorRef
 
 ChangeStatus = Literal["added", "modified", "deleted", "renamed"]
 
-class CommitFileDTO(BaseModel):
-    changeId: str
+class CommitFileModel(BaseModel):
+    change_id: str
     path: str
-    previousPath: Optional[str] = None
+    previous_path: Optional[str] = None
     status: ChangeStatus
-    isBinary: bool = False
-    addedLines: int
-    deletedLines: int
+    is_binary: bool = False
+    added_lines: int
+    deleted_lines: int
 
-class CommitDTO(BaseModel):
+class CommitOut(BaseModel):
     sha: str
     repo: RepoRef
     author: AuthorRef
     committer: Optional[AuthorRef] = None
-    committedAt: datetime
+    committed_at: datetime
     message: str
-    isMerge: bool = False
-    addedLines: int
-    deletedLines: int
-    filesChanged: int
+    is_merge: bool = False
+    added_lines: int
+    deleted_lines: int
+    files_changed: int

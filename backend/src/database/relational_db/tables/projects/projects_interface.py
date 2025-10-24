@@ -31,6 +31,9 @@ class ProjectInterface:
 
         project.full_name = model.full_name
         project.description = model.description
+        project.is_public = model.is_public
+        project.lfs_allow = model.lfs_allow
+        project.is_favorite = model.is_favorite
         project.parent_id = model.parent_id
         project.permissions = model.permissions or {}
         project.created_at = model.created_at

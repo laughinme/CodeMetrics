@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from datetime import datetime
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -24,6 +25,10 @@ class Project(Base, ExternalTimestampMixin):
     )
     full_name: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    
+    is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    lfs_allow: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    is_favorite: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     
     parent_id: Mapped[int | None] = mapped_column(
         ForeignKey("projects.id", ondelete="SET NULL"),
@@ -51,3 +56,18 @@ class Project(Base, ExternalTimestampMixin):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+
+    @property
+    def repo_count(self) -> int:
+        return len(self.repositories)
+
+    @property
+    def last_activity_at(self) -> datetime | None:
+        if not self.repositories:
+            return None
+        
+        valid_dates = [repo.updated_at for repo in self.repositories if repo.updated_at is not None]
+        if not valid_dates:
+            return None
+            
+        return max(valid_dates)

@@ -54,5 +54,7 @@ class RepositoryInterface:
         # repository.structure_path_exclude = [
         #     rule.model_dump(exclude_none=True) for rule in model.repo_structure_paths_exclude
         # ]
+        repository.created_at = model.created_at
+        repository.updated_at = model.updated_at
 
         return repository

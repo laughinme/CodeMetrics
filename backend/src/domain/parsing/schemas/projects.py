@@ -16,7 +16,7 @@ class ProjectModel(TimestampModel):
     description: str | None = Field(None, description="Description set by the user.")
     is_favorite: bool = Field(
         False,
-        description="Whether the project is marked as favourite for the current user",
+        description="Whether the project is marked as favorite for the current user",
     )
     is_public: bool = Field(
         False, description="True if the project is publicly visible"
