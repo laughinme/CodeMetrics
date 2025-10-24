@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -214,3 +213,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Custom
+secrets/
+*.DS_Store
+/backend/src/media
+test.py
+/.vscode
+
+# Local Netlify folder
+.netlify
+backend/recomends_final.md
+backend/swagger.json
