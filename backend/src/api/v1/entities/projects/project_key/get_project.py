@@ -17,5 +17,5 @@ async def get_project_by_key(
     user: Annotated[User, Depends(auth_user)],
     svc: Annotated[EntityService, Depends(get_entity_service)],
 ): 
-    # TODO: Implement project retrieval logic
-    pass
+    project = await svc.get_project(project_key=project_key)
+    return project

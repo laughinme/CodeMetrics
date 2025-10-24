@@ -13,8 +13,8 @@ router = APIRouter()
     response_model=None,
 )
 async def get_project_repos(
+    project_key: Annotated[str, Path(description="Project key (name)")],
     user: Annotated[User, Depends(auth_user)],
     svc: Annotated[EntityService, Depends(get_entity_service)],
 ): 
-    # TODO: Implement repositories retrieval logic
-    pass
+    return await svc.get_project_repos(project_key)
