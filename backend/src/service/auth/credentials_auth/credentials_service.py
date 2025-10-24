@@ -52,25 +52,26 @@ class CredentialsService:
         src: Literal['web', 'mobile']
     ) -> tuple[str, str, str]:
         
-        password_hash = await self._hash_password(payload.password)
-
-        user = User(
-            email=payload.email,
-            password_hash=password_hash,
-            # allow_password_login=True,
-            username=payload.username,
-        )
-        
-        await self.user_repo.add(user)
-
-        default_role = await self.role_repo.get_by_slug(DEFAULT_ROLE.value)
-        if default_role is None:
-            raise RuntimeError("Default role is missing from the database")
-
-        await self.user_repo.assign_roles(user, [default_role])
-        
         try:
+            password_hash = await self._hash_password(payload.password)
+
+            user = User(
+                email=payload.email,
+                password_hash=password_hash,
+                # allow_password_login=True,
+                username=payload.username,
+            )
+            
+            await self.user_repo.add(user)
+
+            default_role = await self.role_repo.get_by_slug(DEFAULT_ROLE.value)
+            if default_role is None:
+                raise RuntimeError("Default role is missing from the database")
+
+            await self.user_repo.assign_roles(user, [default_role])
+            
             await self.uow.session.flush()
+            
         except IntegrityError as e:
             raise AlreadyExists()
 
