@@ -23,11 +23,10 @@ async def get_kpi_metrics(
     author: Optional[UUID] = Query(None, description="Filter by author UUID"),
     metrics_service: MetricsService = ...,
 ) -> KPIResponse:
-    #return await metrics_service.get_kpi_metrics(
-    #    since=since,
-    #    until=until,
-    #    project_key=project_key,
-    #    repo=repo, 
-    #    author=author
-    #)
-    ...
+    return await metrics_service.get_kpi_metrics(
+        since=since,
+        until=until,
+        project_key=project_key,
+        repo=repo, 
+        author=author
+    )

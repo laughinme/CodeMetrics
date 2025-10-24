@@ -23,11 +23,10 @@ async def get_daily_commits(
     author: Optional[UUID] = Query(None, description="Filter by author UUID"),
     metrics_service: MetricsService = ...,
 ) -> List[DailyCommitPoint]:
-    #return await metrics_service.get_daily_commits(
-    #    since=since,
-    #    until=until,
-    #    project_key=project_key,
-    #    repo=repo,
-    #    author=author
-    #)
-    ...
+    return await metrics_service.get_daily_commits(
+        since=since,
+        until=until,
+        project_key=project_key,
+        repo=repo,
+        author=author
+    )
