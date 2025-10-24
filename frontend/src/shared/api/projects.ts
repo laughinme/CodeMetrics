@@ -14,21 +14,30 @@ export async function getProjects() {
     return res.data;
 }
 
-export type ProjectDetails = {
+export type ProjectDetailsDto = {
+  id: number;
+  name: string;
+  full_name: string;
+  description?: string | null;
+  is_public: boolean;
+  repo_count: number;
+  last_activity_at: string;
+};
 
-}
+export type ProjectDetailDto = {
+  id: number;
+  name: string;
+  description?: string | null;
+  is_public: boolean;
+  repo_count: number;
+  last_activity_at: string;
+};
 
-export async function getProjectDetails(project_key:string) {
-    const res = await apiProtected.get<ProjectDetails>(`/entities/projects/${project_key}`);
+export async function getProjectDetails(projectId: number | string) {
+    const res = await apiProtected.get<ProjectDetailDto>(
+        `/entities/projects/${projectId}/`
+    );
     return res.data;
 }
 
-export type ProjectRepos = {
-
-}
-
-export async function getProjectRepos(project_key:string, cursor: string) {
-    const res = await apiProtected.get<ProjectRepos>(`/entities/projects/${project_key}/repos`);
-    return res.data;
-}
 
