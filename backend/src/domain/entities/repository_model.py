@@ -1,10 +1,11 @@
 from uuid import UUID
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class RepositoryOut(BaseModel):
-    model_config = {"populate_by_name": True}
+    model_config = ConfigDict(populate_by_name=True)
     
     id: UUID = Field(..., description="Repository unique identifier")
     project_id: int = Field(..., description="ID of the project this repository belongs to")

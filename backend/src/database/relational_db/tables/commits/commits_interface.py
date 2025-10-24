@@ -5,6 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from domain.parsing.schemas.commits import CommitModel
 
@@ -79,3 +80,42 @@ class CommitInterface:
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def list_recent(
+        self,
+        repository_id: uuid.UUID,
+        *,
+        limit: int,
+        after: datetime | None = None,
+        cursor: tuple[datetime, str] | None = None,
+    ) -> tuple[list[Commit], tuple[datetime, str] | None]:
+        stmt = select(Commit).where(Commit.repo_id == repository_id)
+        if after is not None:
+            stmt = stmt.where(Commit.created_at >= after)
+        if cursor is not None:
+            cursor_dt, cursor_sha = cursor
+            stmt = stmt.where(
+                (Commit.created_at < cursor_dt)
+                | ((Commit.created_at == cursor_dt) & (Commit.sha < cursor_sha))
+            )
+
+        stmt = (
+            stmt.order_by(Commit.created_at.desc(), Commit.sha.desc())
+            .limit(limit + 1)
+            .options(
+                selectinload(Commit.author),
+                selectinload(Commit.committer),
+                selectinload(Commit.files),
+                selectinload(Commit.repository).selectinload(Repository.project),
+            )
+        )
+
+        result = await self.session.execute(stmt)
+        commits = list(result.scalars().all())
+
+        next_cursor = None
+        if len(commits) > limit:
+            overflow = commits.pop(limit)
+            next_cursor = (overflow.created_at, overflow.sha)
+
+        return commits, next_cursor

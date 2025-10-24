@@ -1,9 +1,7 @@
-from typing import Optional
-
 from pydantic import BaseModel
 
-class BranchDTO(BaseModel):
+
+class BranchOut(BaseModel):
     id: str
     name: str
-    isDefault: bool
-    headCommitSha: Optional[str]
+    is_default: bool

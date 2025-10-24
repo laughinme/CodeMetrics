@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,3 +43,11 @@ class BranchInterface:
                 await self.session.delete(branch)
 
         return synced
+
+    async def list_for_repository(self, repository_id: UUID) -> list[Branch]:
+        rows = await self.session.scalars(
+            select(Branch)
+            .where(Branch.repo_id == repository_id)
+            .order_by(Branch.name)
+        )
+        return list(rows.all())

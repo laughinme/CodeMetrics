@@ -1,14 +1,15 @@
-from typing import Literal, Optional
 from datetime import datetime
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
-from .commons import RepoRef, AuthorRef
+from .commons import AuthorRef, RepoRef
 
 
 ChangeStatus = Literal["added", "modified", "deleted", "renamed"]
 
-class CommitFileModel(BaseModel):
+
+class CommitFileOut(BaseModel):
     change_id: str
     path: str
     previous_path: Optional[str] = None
@@ -16,6 +17,7 @@ class CommitFileModel(BaseModel):
     is_binary: bool = False
     added_lines: int
     deleted_lines: int
+
 
 class CommitOut(BaseModel):
     sha: str
@@ -27,4 +29,4 @@ class CommitOut(BaseModel):
     is_merge: bool = False
     added_lines: int
     deleted_lines: int
-    files_changed: int
+    files_changed: int = 0

@@ -1,20 +1,26 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from typing import Generic, List, Optional, TypeVar
 
-# Ссылки/идентификаторы
+from pydantic import BaseModel, EmailStr
+from pydantic.generics import GenericModel
+
+
 class ProjectRef(BaseModel):
-    key: str  # из projects.name
+    key: str
+
+
 class RepoRef(BaseModel):
-    projectKey: str
+    project_key: str
     name: str
 
-# Автор
+
 class AuthorRef(BaseModel):
     id: str
     name: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
 
-# Пагинация
-class Page[T](BaseModel):
+
+T = TypeVar("T")
+
+class Page(GenericModel, Generic[T]):
     items: List[T]
-    nextCursor: Optional[str] = None
+    next_cursor: str | None = None

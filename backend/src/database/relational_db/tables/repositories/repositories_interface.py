@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -58,3 +60,18 @@ class RepositoryInterface:
         repository.updated_at = model.updated_at
 
         return repository
+
+    async def get_by_id(self, repo_id: UUID) -> Repository | None:
+        stmt = select(Repository).where(Repository.id == repo_id)
+        return await self.session.scalar(stmt)
+
+    async def get_by_project_and_name(
+        self,
+        project_id: int,
+        repository_name: str,
+    ) -> Repository | None:
+        stmt = select(Repository).where(
+            Repository.project_id == project_id,
+            Repository.name == repository_name,
+        )
+        return await self.session.scalar(stmt)

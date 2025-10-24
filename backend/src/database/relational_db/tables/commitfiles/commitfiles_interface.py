@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Optional
 
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +17,7 @@ class CommitFilePayload:
     deleted_lines: int
     patch: str
     is_binary: bool
+    previous_path: Optional[str] = None
 
 
 class CommitFileInterface:
