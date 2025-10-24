@@ -6,9 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from domain.parsing.schemas.projects import ProjectModel
 
 from .projects_table import Project
-
-if TYPE_CHECKING:
-    from ..repositories.repositories_table import Repository
+from ..repositories import Repository
 
 
 class ProjectInterface:
@@ -45,11 +43,17 @@ class ProjectInterface:
         stmt = select(Project).where(Project.name == name)
         return await self.session.scalar(stmt)
     
+    async def get_by_id(self, id: int) -> Project | None:
+        stmt = select(Project).where(Project.id == id)
+        return await self.session.scalar(stmt)
+    
     async def list_all(self) -> list[Project]:
         rows = await self.session.scalars(select(Project))
-        return list(rows)
+        return list(rows.all())
 
-    async def get_repos(self, name: str) -> list["Repository"]:
-        stmt = select(Project).where(Project.name == name)
-        project = await self.session.scalar(stmt)
-        return project.repositories
+    async def get_repos(self, project_id: int) -> list[Repository]:
+        rows = await self.session.scalars(
+            select(Repository)
+            .where(Repository.project_id == project_id)
+        )
+        return list(rows.all())

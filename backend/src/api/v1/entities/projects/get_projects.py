@@ -18,5 +18,4 @@ async def get_projects(
     svc: Annotated[EntityService, Depends(get_entity_service)],
 ): 
     projects = await svc.list_projects()
-    print([project.last_activity_at for project in projects])
     return projects

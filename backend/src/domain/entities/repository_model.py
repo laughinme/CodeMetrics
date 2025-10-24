@@ -1,12 +1,14 @@
-from typing import Optional
+from uuid import UUID
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-class RepositoryDTO(BaseModel):
-    id: str                  # UUID
-    projectKey: str
-    name: str
-    defaultBranch: Optional[str]
-    description: Optional[str]
-    lastActivityAt: Optional[datetime] = None
+class RepositoryOut(BaseModel):
+    model_config = {"populate_by_name": True}
+    
+    id: UUID = Field(..., description="Repository unique identifier")
+    project_id: int = Field(..., description="ID of the project this repository belongs to")
+    name: str = Field(..., description="Repository name")
+    default_branch: str | None = Field(None, description="Default branch name of the repository")
+    description: str | None = Field(None, description="Description provided by repository owner")
+    last_activity_at: datetime | None = Field(None, description="Timestamp of last activity in repository", alias="updated_at")
