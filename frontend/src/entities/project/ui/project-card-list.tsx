@@ -4,11 +4,11 @@ import { memo } from "react"
 
 import { cn } from "@/shared/lib/utils"
 
-import type { ProjectOverview } from "../model/types"
+import type { Project } from "../model/types"
 import { ProjectCard } from "./project-card"
 
 type ProjectCardListProps = {
-  projects: ProjectOverview[]
+  projects: Project[]
   className?: string
 }
 

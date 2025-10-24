@@ -1,11 +1,16 @@
 import apiProtected from "./axiosInstance";
 
-export type Projects = {
-
+export type ProjectDto = {
+    id: number,
+    name: string,
+    description?: string | null,
+    is_public: boolean,
+    repo_count: number,
+    last_activity_at: string
 }
 
-export async function getProjects(cursor: string, limit: number) {
-    const res = await apiProtected.get<Projects>('/entities/projects/');
+export async function getProjects() {
+    const res = await apiProtected.get<ProjectDto[]>('/entities/projects/');
     return res.data;
 }
 

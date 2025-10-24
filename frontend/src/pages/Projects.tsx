@@ -2,10 +2,7 @@ import type { CSSProperties } from "react"
 
 import { GitBranch, History } from "lucide-react"
 
-import {
-  projectFilters,
-  projectOverviews,
-} from "@/entities/project"
+import { projectFilters } from "@/entities/project"
 import { AppSidebar } from "@/shared/components/app-sidebar"
 import { SiteHeader } from "@/shared/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/shared/components/ui/sidebar"
@@ -24,13 +21,12 @@ export default function ProjectsPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader
-          title="Projects"
-          description="Фильтры применяются ко всем виджетам на странице"/>
+          title="Projects" />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-4">
             <div className="flex flex-col gap-6 py-6">
               <div className="px-4 lg:px-6">
-                <ProjectListWidget projects={projectOverviews} />
+                <ProjectListWidget />
               </div>
             </div>
           </div>

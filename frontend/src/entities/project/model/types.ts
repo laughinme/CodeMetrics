@@ -1,11 +1,8 @@
-export type ProjectVisibility = "public" | "private"
-
-export type ProjectOverview = {
-  id: string
-  name: string
-  visibility: ProjectVisibility
-  commits: number
-  developers: number
-  repositories: number
-  averageCommitSize: number
+export type Project = {
+  id: number
+  title: string
+  badge: "Public" | "Private"
+  repos: number
+  lastActivity: string
+  description: string | null
 }
