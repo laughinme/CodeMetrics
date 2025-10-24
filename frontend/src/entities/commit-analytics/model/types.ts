@@ -5,8 +5,6 @@ export type TimeRangeOption = {
   label: string
 }
 
-export type CommitDayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"
-
 export type AuthorDatum = {
   author: string
   commits: number
@@ -17,8 +15,7 @@ export type DailyCommitsDatum = {
   commits: number
 }
 
-export type HourlyActivityDatum = {
-  day: CommitDayKey
-  hour: number
+export type ContributionActivityDatum = {
+  date: string
   commits: number
 }

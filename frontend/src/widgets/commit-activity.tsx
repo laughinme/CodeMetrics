@@ -4,19 +4,18 @@ import * as React from "react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
+  activityRangeOptions,
   CommitActivityChart,
-  commitTimeRangeOptions,
   getMockDailyCommits,
-  type CommitTimeRange,
+  type ActivityRange,
   type DailyCommitsDatum,
 } from "@/entities/commit-analytics"
 
-const DEFAULT_RANGE: CommitTimeRange = "30d"
+const DEFAULT_RANGE: ActivityRange = activityRangeOptions[0]?.value ?? "90d"
 
 export function CommitActivityWidget() {
   const isMobile = useIsMobile()
-  const [range, setRange] =
-    React.useState<CommitTimeRange>(DEFAULT_RANGE)
+  const [range, setRange] = React.useState<ActivityRange>(DEFAULT_RANGE)
 
   React.useEffect(() => {
     if (isMobile) {
@@ -27,30 +26,12 @@ export function CommitActivityWidget() {
   const allCommits = React.useMemo(() => getMockDailyCommits(), [])
 
   const activityData = React.useMemo<DailyCommitsDatum[]>(() => {
-    if (range === "all") {
-      return allCommits
-    }
-
-    const days =
-      range === "1d" ? 1 : range === "7d" ? 7 : range === "30d" ? 30 : 30
-
-    const lastPoint = allCommits[allCommits.length - 1]
-    if (!lastPoint) {
-      return []
-    }
-
-    const referenceDate = new Date(lastPoint.date)
-    const startDate = new Date(referenceDate)
-    startDate.setDate(startDate.getDate() - (days - 1))
-
-    return allCommits.filter((item) => {
-      const itemDate = new Date(item.date)
-      return itemDate >= startDate
-    })
+    const days = range === "90d" ? 90 : range === "30d" ? 30 : 7
+    return allCommits.slice(Math.max(allCommits.length - days, 0))
   }, [allCommits, range])
 
   const rangeLabel =
-    commitTimeRangeOptions.find((option) => option.value === range)?.label ?? ""
+    activityRangeOptions.find((option) => option.value === range)?.label ?? ""
 
   return (
     <CommitActivityChart
@@ -58,7 +39,7 @@ export function CommitActivityWidget() {
       range={range}
       rangeLabel={rangeLabel}
       onRangeChange={setRange}
-      rangeOptions={commitTimeRangeOptions}
+      rangeOptions={activityRangeOptions}
     />
   )
 }

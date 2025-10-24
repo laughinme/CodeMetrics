@@ -4,7 +4,7 @@ import DevelopersPage from "@/pages/Developers";
 import InsightsPage from "@/pages/Insights";
 import AuthPage from "@/pages/auth/ui/AuthPage";
 import ProjectsPage from "@/pages/Projects";
-import RepositoriesPage from "@/pages/Repositories";
+import TimelinePage from "@/pages/Timeline";
 import { useAuth } from "@/app/providers/auth/useAuth";
 
 const RequireAuth = () => {
@@ -50,7 +50,8 @@ export const routes: RouteObject[] = [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: "dashboard", element: <DashboardPage /> },
       { path: "projects", element: <ProjectsPage /> },
-      { path: "repositories", element: <RepositoriesPage /> },
+      { path: "timeline", element: <TimelinePage /> },
+      { path: "repositories", element: <Navigate to="/timeline" replace /> },
       { path: "developers", element: <DevelopersPage /> },
       { path: "insights", element: <InsightsPage /> }
     ]

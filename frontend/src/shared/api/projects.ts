@@ -4,7 +4,7 @@ export type Projects = {
 
 }
 
-export async function getProjects(params:type) {
+export async function getProjects(cursor: string, limit: number) {
     const res = await apiProtected.get<Projects>('/entities/projects/');
     return res.data;
 }

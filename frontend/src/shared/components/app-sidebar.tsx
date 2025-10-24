@@ -3,9 +3,9 @@ import { Link } from "react-router-dom"
 import {
   IconChartBar,
   IconDashboard,
-  IconDatabase,
   IconFolder,
   IconInnerShadowTop,
+  IconTimeline,
   IconUsers,
 } from "@tabler/icons-react"
 
@@ -39,9 +39,9 @@ const data = {
       icon: IconFolder,
     },
     {
-      title: "Repositories",
-      url: "/repositories",
-      icon: IconDatabase,
+      title: "Timeline",
+      url: "/timeline",
+      icon: IconTimeline,
     },
     {
       title: "Developers",

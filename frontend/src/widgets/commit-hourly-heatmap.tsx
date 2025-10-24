@@ -6,9 +6,9 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import {
   CommitHourlyHeatmapChart,
   commitTimeRangeOptions,
-  getMockHourlyActivity,
+  getMockContributionActivity,
   type CommitTimeRange,
-  type HourlyActivityDatum,
+  type ContributionActivityDatum,
 } from "@/entities/commit-analytics"
 
 const DEFAULT_RANGE: CommitTimeRange = "30d"
@@ -24,8 +24,8 @@ export function CommitHourlyHeatmapWidget() {
     }
   }, [isMobile])
 
-  const data = React.useMemo<HourlyActivityDatum[]>(() => {
-    return getMockHourlyActivity(range)
+  const data = React.useMemo<ContributionActivityDatum[]>(() => {
+    return getMockContributionActivity(range)
   }, [range])
 
   const rangeLabel =

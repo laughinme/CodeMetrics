@@ -1,5 +1,6 @@
 "use client"
 
+import { useId } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import {
@@ -36,7 +37,7 @@ import type {
 const topAuthorsChartConfig = {
   commits: {
     label: "Commits",
-    color: "hsl(var(--primary))",
+    color: "#3bd45c",
   },
 } satisfies ChartConfig
 
@@ -55,12 +56,21 @@ export function CommitTopAuthorsChart({
   onRangeChange,
   rangeOptions,
 }: CommitTopAuthorsChartProps) {
+  const gradient = useId()
+  const gradientId = gradient.replace(/:/g, "")
+
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle>ТОП авторов по числу коммитов</CardTitle>
-        <CardDescription>Выбранный период: {rangeLabel}</CardDescription>
-        <CardAction>
+    <Card className="h-full rounded-3xl border-border/30 bg-card/80 shadow-[0_10px_50px_-26px_rgba(64,217,108,0.35)] backdrop-blur">
+      <CardHeader className="flex flex-col gap-2 pb-0">
+        <div className="flex flex-col gap-1">
+          <CardTitle className="text-lg font-semibold text-foreground">
+            ТОП авторов (по коммитам)
+          </CardTitle>
+          <CardDescription className="text-sm text-muted-foreground/80">
+            Период: {rangeLabel}
+          </CardDescription>
+        </div>
+        <CardAction className="mt-2">
           <ToggleGroup
             type="single"
             value={range}
@@ -70,7 +80,7 @@ export function CommitTopAuthorsChart({
               }
             }}
             variant="outline"
-            className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"
+            className="hidden rounded-full border border-border/20 bg-muted/30 px-1 py-1 *:data-[slot=toggle-group-item]:!rounded-full *:data-[slot=toggle-group-item]:!px-3 @[767px]/card:flex"
           >
             {rangeOptions.map((option) => (
               <ToggleGroupItem key={option.value} value={option.value}>
@@ -83,13 +93,13 @@ export function CommitTopAuthorsChart({
             onValueChange={(value) => onRangeChange(value as CommitTimeRange)}
           >
             <SelectTrigger
-              className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
+              className="flex w-40 rounded-full border-border/20 bg-muted/40 px-3 **:data-[slot=select-value]:truncate @[767px]/card:hidden"
               size="sm"
               aria-label="Выберите период"
             >
               <SelectValue placeholder="Выберите период" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl">
+            <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
               {rangeOptions.map((option) => (
                 <SelectItem
                   key={option.value}
@@ -103,7 +113,7 @@ export function CommitTopAuthorsChart({
           </Select>
         </CardAction>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className="px-2 pb-6 pt-6 sm:px-6">
         <ChartContainer
           config={topAuthorsChartConfig}
           className="aspect-auto h-[320px] w-full"
@@ -111,27 +121,38 @@ export function CommitTopAuthorsChart({
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 12, right: 12, bottom: 12, left: 12 }}
+            margin={{ top: 12, right: 24, bottom: 12, left: 24 }}
+            barCategoryGap={20}
           >
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#3bd45c" stopOpacity={0.85} />
+                <stop offset="100%" stopColor="#22c55e" stopOpacity={0.95} />
+              </linearGradient>
+            </defs>
             <CartesianGrid
-              strokeDasharray="4 4"
+              strokeDasharray="4 8"
               horizontal={false}
-              opacity={0.6}
+              stroke="rgba(148, 163, 184, 0.18)"
             />
             <XAxis
               type="number"
               axisLine={false}
               tickLine={false}
+              tickMargin={8}
+              tick={{ fill: "rgba(226,232,240,0.65)", fontSize: 12 }}
             />
             <YAxis
               dataKey="author"
               type="category"
               axisLine={false}
               tickLine={false}
+              tickMargin={12}
               width={140}
+              tick={{ fill: "rgba(226,232,240,0.75)", fontSize: 13 }}
             />
             <ChartTooltip
-              cursor={{ fill: "hsl(var(--muted) / 0.35)" }}
+              cursor={{ fill: "rgba(34,197,94,0.12)" }}
               content={
                 <ChartTooltipContent
                   labelKey="author"
@@ -159,9 +180,9 @@ export function CommitTopAuthorsChart({
             />
             <Bar
               dataKey="commits"
-              fill="var(--color-commits)"
-              radius={[0, 6, 6, 0]}
-              barSize={18}
+              fill={`url(#${gradientId})`}
+              radius={[0, 12, 12, 0]}
+              barSize={20}
             />
           </BarChart>
         </ChartContainer>

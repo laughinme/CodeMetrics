@@ -3,18 +3,17 @@
 import { useId } from "react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
+import { cn } from "@/shared/lib/utils"
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/shared/components/ui/chart"
-import { cn } from "@/shared/lib/utils"
 import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card"
@@ -29,68 +28,53 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/shared/components/ui/toggle-group"
-import type { DailyCommitsDatum } from "../model/types"
 
-const dailyCommitsChartConfig = {
-  commits: {
-    label: "Commits",
+import type {
+  TimelineDailyDatum,
+  TimelineRange,
+  TimelineRangeOption,
+} from "../model/types"
+
+const chartConfig = {
+  count: {
+    label: "Count",
     color: "hsl(var(--muted-foreground))",
   },
 } satisfies ChartConfig
 
-export type ActivityRange = "90d" | "30d" | "7d"
-
-export type ActivityRangeOption = {
-  value: ActivityRange
-  label: string
+type TimelineTrendChartProps = {
+  data: TimelineDailyDatum[]
+  range: TimelineRange
+  rangeOptions: TimelineRangeOption[]
+  onRangeChange: (range: TimelineRange) => void
+  className?: string
 }
 
-export const activityRangeOptions: ActivityRangeOption[] = [
-  { value: "90d", label: "Last 3 months" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "7d", label: "Last 7 days" },
-]
-
-type CommitActivityChartProps = {
-  data: DailyCommitsDatum[]
-  range: ActivityRange
-  rangeLabel: string
-  onRangeChange: (range: ActivityRange) => void
-  rangeOptions: ActivityRangeOption[]
-}
-
-export function CommitActivityChart({
+export function TimelineTrendChart({
   data,
   range,
-  rangeLabel,
-  onRangeChange,
   rangeOptions,
-}: CommitActivityChartProps) {
-  const gradient = useId()
-  const gradientId = gradient.replace(/:/g, "")
-  const displayLabel =
-    rangeLabel || rangeOptions.find((option) => option.value === range)?.label || "Selected period"
+  onRangeChange,
+  className,
+}: TimelineTrendChartProps) {
+  const gradientId = useId().replace(/:/g, "")
 
   return (
-    <Card className="h-full rounded-3xl border-border/30 bg-card/80 shadow-[0_10px_60px_-28px_rgba(76,81,255,0.35)] backdrop-blur">
+    <Card
+      className={cn(
+        "rounded-3xl border-border/30 bg-card/80 shadow-[0_10px_60px_-28px_rgba(76,81,255,0.35)] backdrop-blur",
+        className,
+      )}
+    >
       <CardHeader className="flex flex-col gap-2 pb-0">
-        <div className="flex flex-col gap-1">
-          <CardTitle className="text-lg font-semibold text-foreground">
-            Total Commit Frequency
-          </CardTitle>
-          <CardDescription className="text-sm text-muted-foreground/80">
-            Total for {displayLabel.toLowerCase()}
-          </CardDescription>
-        </div>
+        <CardTitle className="text-lg font-semibold text-foreground">
+          Временная линия активности (daily)
+        </CardTitle>
         <CardAction className="mt-2">
           <ToggleGroup
             type="single"
             value={range}
-            onValueChange={(value) => {
-              if (value) {
-                onRangeChange(value as ActivityRange)
-              }
-            }}
+            onValueChange={(value) => value && onRangeChange(value as TimelineRange)}
             variant="outline"
             className="hidden h-12 items-center gap-0 rounded-full border border-border/30 bg-background/60 p-1 text-sm shadow-inner @[767px]/card:flex"
           >
@@ -103,31 +87,23 @@ export function CommitActivityChart({
                   "rounded-full border border-transparent text-muted-foreground/80",
                   "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:border-white/20",
                   "data-[state=off]:hover:bg-background/20 data-[state=off]:hover:text-foreground/80",
-                  "focus-visible:ring-0 focus-visible:ring-offset-0"
+                  "focus-visible:ring-0 focus-visible:ring-offset-0",
                 )}
               >
                 {option.label}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <Select
-            value={range}
-            onValueChange={(value) => onRangeChange(value as ActivityRange)}
-          >
+          <Select value={range} onValueChange={(value) => onRangeChange(value as TimelineRange)}>
             <SelectTrigger
               className="flex h-11 w-48 items-center justify-between rounded-full border border-border/30 bg-background/60 px-4 text-sm font-medium text-foreground/80 shadow-inner @[767px]/card:hidden"
-              size="sm"
-              aria-label="Select a period"
+              aria-label="Select range"
             >
-              <SelectValue placeholder={displayLabel} />
+              <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
               {rangeOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className="rounded-lg"
-                >
+                <SelectItem key={option.value} value={option.value} className="rounded-lg">
                   {option.label}
                 </SelectItem>
               ))}
@@ -136,14 +112,8 @@ export function CommitActivityChart({
         </CardAction>
       </CardHeader>
       <CardContent className="px-2 pb-6 pt-6 sm:px-6">
-        <ChartContainer
-          config={dailyCommitsChartConfig}
-          className="aspect-auto h-[340px] w-full"
-        >
-          <AreaChart
-            data={data}
-            margin={{ top: 12, right: 8, left: 8, bottom: 0 }}
-          >
+        <ChartContainer config={chartConfig} className="aspect-auto h-[320px] w-full">
+          <AreaChart data={data} margin={{ top: 12, right: 12, left: 4, bottom: 0 }}>
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="rgba(143,149,173,0.45)" />
@@ -160,7 +130,7 @@ export function CommitActivityChart({
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tickMargin={12}
+              tickMargin={10}
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value as string)
@@ -174,7 +144,7 @@ export function CommitActivityChart({
             <YAxis
               axisLine={false}
               tickLine={false}
-              tickMargin={12}
+              tickMargin={10}
               allowDecimals={false}
               tick={{ fill: "rgba(226,232,240,0.65)", fontSize: 12 }}
             />
@@ -187,6 +157,7 @@ export function CommitActivityChart({
                     new Date(value as string).toLocaleDateString("ru-RU", {
                       day: "numeric",
                       month: "long",
+                      year: "numeric",
                     })
                   }
                   formatter={(value) => {
@@ -212,7 +183,7 @@ export function CommitActivityChart({
             />
             <Area
               type="monotone"
-              dataKey="commits"
+              dataKey="count"
               stroke="rgba(148,163,184,0.9)"
               strokeWidth={2}
               fill={`url(#${gradientId})`}

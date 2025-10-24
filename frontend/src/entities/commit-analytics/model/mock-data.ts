@@ -1,9 +1,8 @@
 import {
   type AuthorDatum,
-  type CommitDayKey,
   type CommitTimeRange,
+  type ContributionActivityDatum,
   type DailyCommitsDatum,
-  type HourlyActivityDatum,
   type TimeRangeOption,
 } from "./types"
 
@@ -13,26 +12,6 @@ export const commitTimeRangeOptions: TimeRangeOption[] = [
   { value: "30d", label: "30 дней" },
   { value: "all", label: "Все время" },
 ]
-
-export const commitDayOrder: CommitDayKey[] = [
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-  "sun",
-]
-
-export const commitDayLabels: Record<CommitDayKey, string> = {
-  mon: "Пн",
-  tue: "Вт",
-  wed: "Ср",
-  thu: "Чт",
-  fri: "Пт",
-  sat: "Сб",
-  sun: "Вс",
-}
 
 const authorDataset: Record<CommitTimeRange, AuthorDatum[]> = {
   "1d": [
@@ -105,46 +84,53 @@ export function getMockDailyCommits(): DailyCommitsDatum[] {
   return [...dailyCommitsDataset]
 }
 
-const hourlyPattern = [
-  0.04, 0.03, 0.025, 0.02, 0.02, 0.03, 0.06, 0.12, 0.18, 0.24, 0.28, 0.32,
-  0.34, 0.33, 0.31, 0.3, 0.27, 0.24, 0.21, 0.18, 0.14, 0.1, 0.07, 0.05,
-]
+const contributionCalendarDataset: ContributionActivityDatum[] = (() => {
+  const totalWeeks = 52
+  const totalDays = totalWeeks * 7
+  const endDate = new Date("2024-10-26T00:00:00Z")
 
-const dayModifiers: Record<CommitDayKey, number> = {
-  mon: 1,
-  tue: 1.05,
-  wed: 1.12,
-  thu: 1.08,
-  fri: 1.15,
-  sat: 0.82,
-  sun: 0.74,
-}
+  return Array.from({ length: totalDays }, (_, index) => {
+    const date = new Date(endDate)
+    date.setUTCDate(date.getUTCDate() - (totalDays - 1 - index))
+    date.setUTCHours(0, 0, 0, 0)
 
-const rangeBaseIntensity: Record<CommitTimeRange, number> = {
-  "1d": 18,
-  "7d": 85,
-  "30d": 260,
-  all: 520,
-}
+    const weekIndex = Math.floor(index / 7)
+    const dayOfWeek = index % 7
+    const seasonal =
+      3.2 +
+      2.4 * Math.sin((weekIndex + 4) / 3) +
+      1.8 * Math.cos((weekIndex + dayOfWeek) / 2.6)
+    const weekendFactor = dayOfWeek === 0 || dayOfWeek === 6 ? 0.5 : 1
+    const spike =
+      (weekIndex % 6 === 0 && dayOfWeek === 2) ||
+      (weekIndex % 9 === 4 && dayOfWeek === 4)
+        ? 4
+        : 0
 
-export function getMockHourlyActivity(
-  range: CommitTimeRange
-): HourlyActivityDatum[] {
-  const base = rangeBaseIntensity[range]
+    const commits = Math.max(
+      0,
+      Math.round(seasonal * weekendFactor + spike + Math.random() * 2 - 1.5)
+    )
 
-  if (!base) {
-    return []
-  }
-
-  return commitDayOrder.flatMap<HourlyActivityDatum>((day) => {
-    const modifier = dayModifiers[day]
-    return hourlyPattern.map((hourValue, hour) => ({
-      day,
-      hour,
-      commits: Math.max(
-        0,
-        Math.round(base * modifier * hourValue + (hour % 3) - 1)
-      ),
-    }))
+    return {
+      date: date.toISOString().slice(0, 10),
+      commits,
+    }
   })
+})()
+
+const rangeDaysMap: Record<CommitTimeRange, number> = {
+  "1d": 7,
+  "7d": 28,
+  "30d": 26 * 7,
+  all: contributionCalendarDataset.length,
+}
+
+export function getMockContributionActivity(
+  range: CommitTimeRange
+): ContributionActivityDatum[] {
+  const total = contributionCalendarDataset.length
+  const days = rangeDaysMap[range] ?? total
+  const startIndex = Math.max(0, total - days)
+  return contributionCalendarDataset.slice(startIndex)
 }
