@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime, timedelta
 
 from database.relational_db import UoW
-from database.relational_db.tables.authors import AuthorInterface
-from database.relational_db.tables.branches import BranchInterface
-from database.relational_db.tables.commitfiles import CommitFileInterface
-from database.relational_db.tables.commits import CommitInterface
-from database.relational_db.tables.projects import Project, ProjectInterface
-from database.relational_db.tables.repositories import Repository, RepositoryInterface
+from database.relational_db.tables import (
+    AuthorInterface, 
+    BranchInterface, 
+    CommitFileInterface, 
+    CommitInterface, 
+    ProjectInterface, 
+    Repository,
+    RepositoryInterface,
+    Project,
+)
 from domain.parsing.schemas import (
     BranchModel,
     CommitModel,
@@ -26,17 +31,25 @@ from .exceptions import ExternalAPIError
 logger = logging.getLogger(__name__)
 
 
-class SyncService:
+class SourceCodeSyncService:
     def __init__(
         self,
         client: ExternalAPIClient,
         uow: UoW,
         *,
-        page_size: int = 50,
+        page_size: int = 500,
+        commit_window_days: int = 90,
+        max_commit_pages: int = 20,
+        resync_overlap_seconds: int = 60,
     ) -> None:
         self._client = client
         self._uow = uow
-        self._page_size = page_size
+        self._page_size = min(page_size, 500)
+        self._commit_window = (
+            timedelta(days=commit_window_days) if commit_window_days > 0 else None
+        )
+        self._max_commit_pages = max_commit_pages
+        self._resync_overlap = timedelta(seconds=resync_overlap_seconds)
 
         session = uow.session
         self._projects = ProjectInterface(session)
@@ -73,11 +86,9 @@ class SyncService:
     ) -> None:
         logger.info("Syncing repository %s/%s", project_key, model.key)
         branches = await self._fetch_branches(project_key, model.key)
-        enriched_branches = []
         for branch in branches:
             branch.is_default = branch.name == (model.default_branch or "")
-            enriched_branches.append(branch)
-        await self._branches.sync_from_models(repository, enriched_branches)
+        await self._branches.sync_from_models(repository, branches)
 
         await self._sync_commits(project_key, model.key, repository)
 
@@ -87,26 +98,57 @@ class SyncService:
         repository_name: str,
         repository: Repository,
     ) -> None:
+        after_iso: str | None = None
+        latest_created = await self._commits.get_latest_created_at(repository.id)
+        if latest_created is not None:
+            anchor = latest_created - self._resync_overlap
+            after_iso = anchor.isoformat()
+        elif self._commit_window is not None:
+            anchor = datetime.now(UTC) - self._commit_window
+            after_iso = anchor.isoformat()
+
         cursor: str | None = None
+        page = 0
         while True:
             logger.debug(
-                "Fetching commits for %s/%s (cursor=%s)",
+                "Fetching commits for %s/%s page=%d cursor=%s after=%s",
                 project_key,
                 repository_name,
+                page,
                 cursor,
+                after_iso,
             )
             commits, cursor = await self._fetch_commits(
                 project_key,
                 repository_name,
                 cursor=cursor,
+                after=after_iso,
             )
+            logger.debug(
+                "Fetched %d commits for %s/%s page=%d next_cursor=%s",
+                len(commits),
+                project_key,
+                repository_name,
+                page,
+                cursor,
+            )
+
             if not commits:
                 break
 
             for commit_model in commits:
                 await self._store_commit(project_key, repository_name, repository, commit_model)
 
+            page += 1
             if not cursor:
+                break
+            if self._max_commit_pages and page >= self._max_commit_pages:
+                logger.info(
+                    "Stopping commit fetch for %s/%s after %d pages (cap reached)",
+                    project_key,
+                    repository_name,
+                    self._max_commit_pages,
+                )
                 break
 
     async def _store_commit(
@@ -179,10 +221,13 @@ class SyncService:
         repo_name: str,
         *,
         cursor: str | None = None,
+        after: str | None = None,
     ) -> tuple[list[CommitModel], str | None]:
         params: dict[str, str | int | bool] = {"limit": self._page_size, "fullHistory": False}
         if cursor:
             params["cursor"] = cursor
+        if after:
+            params["after"] = after
 
         payload = await self._client.get_json(
             f"/projects/{project_key}/repos/{repo_name}/commits",

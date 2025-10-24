@@ -90,10 +90,10 @@ class Commit(Base):
         back_populates="committed_commits",
         lazy="selectin",
     )
-    branches: Mapped[list["Branch"]] = relationship(
-        back_populates="head_commit",
-        lazy="selectin",
-    )
+    # branches: Mapped[list["Branch"]] = relationship(
+    #     back_populates="head_commit",
+    #     lazy="selectin",
+    # )
     files: Mapped[list["CommitFile"]] = relationship(
         back_populates="commit",
         cascade="all, delete-orphan",

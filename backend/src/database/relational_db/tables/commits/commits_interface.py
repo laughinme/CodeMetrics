@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import uuid
+from datetime import datetime
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.parsing.schemas.commits import CommitModel
 
-from ..authors.authors_table import Author
-from ..repositories.repositories_table import Repository
 from .commits_table import Commit
+from ..authors import Author
+from ..repositories import Repository
 
 
 class CommitInterface:
@@ -65,3 +69,13 @@ class CommitInterface:
         commit.deleted_lines = deleted_lines
         commit.is_merge_commit = commit.is_merge_commit or files_changed > 0 and len(commit.parents) > 1
         return commit
+
+    async def get_latest_created_at(self, repository_id: uuid.UUID) -> datetime | None:
+        stmt = (
+            select(Commit.created_at)
+            .where(Commit.repo_id == repository_id)
+            .order_by(Commit.created_at.desc())
+            .limit(1)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()

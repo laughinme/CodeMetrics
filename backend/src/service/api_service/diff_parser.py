@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 
-from database.relational_db.tables.commitfiles import CommitFilePayload
+from database.relational_db import CommitFilePayload
 
 
 def decode_diff_content(content: str | None) -> str:

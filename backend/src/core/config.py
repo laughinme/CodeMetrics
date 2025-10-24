@@ -2,6 +2,7 @@ import logging
 
 from pathlib import Path
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR  = Path(__file__).resolve().parent.parent.parent
@@ -22,6 +23,8 @@ class Settings(BaseSettings):
     # Site data (url, paths)
     SITE_URL: str = ''
     API_URL: str
+    API_USERNAME: str
+    API_PASSWORD: SecretStr
     
     # Auth Settings    
     JWT_PRIVATE_KEY: str
@@ -34,7 +37,9 @@ class Settings(BaseSettings):
     # Database settings
     DATABASE_URL: str
     REDIS_URL: str
-
+    
+    
+config = Settings() # pyright: ignore[reportCallIssue]
 
 def configure_logging():
     logging.basicConfig(

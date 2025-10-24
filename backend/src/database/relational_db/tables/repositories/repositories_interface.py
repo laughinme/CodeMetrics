@@ -34,25 +34,25 @@ class RepositoryInterface:
 
         repository.description = model.description
         repository.default_branch = model.default_branch
-        repository.is_fork = model.is_fork
-        repository.fork_slug = (
-            f"{model.fork_slug.owner}/{model.fork_slug.name}"
-            if model.fork_slug
-            else None
-        )
-        repository.enable_paths_restrictions = model.enable_paths_restrictions
-        repository.clone_links = (
-            model.clone_links.model_dump(exclude_none=True)
-            if model.clone_links
-            else {}
-        )
+        # repository.is_fork = model.is_fork
+        # repository.fork_slug = (
+        #     f"{model.fork_slug.owner}/{model.fork_slug.name}"
+        #     if model.fork_slug
+        #     else None
+        # )
+        # repository.enable_paths_restrictions = model.enable_paths_restrictions
+        # repository.clone_links = (
+        #     model.clone_links.model_dump(exclude_none=True)
+        #     if model.clone_links
+        #     else {}
+        # )
         repository.permissions = model.permissions or {}
         repository.topics = model.topics or []
-        repository.structure_path_include = [
-            rule.model_dump(exclude_none=True) for rule in model.repo_structure_paths_include
-        ]
-        repository.structure_path_exclude = [
-            rule.model_dump(exclude_none=True) for rule in model.repo_structure_paths_exclude
-        ]
+        # repository.structure_path_include = [
+        #     rule.model_dump(exclude_none=True) for rule in model.repo_structure_paths_include
+        # ]
+        # repository.structure_path_exclude = [
+        #     rule.model_dump(exclude_none=True) for rule in model.repo_structure_paths_exclude
+        # ]
 
         return repository
