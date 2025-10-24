@@ -46,7 +46,7 @@ class ProjectInterface:
         rows = await self.session.scalars(select(Project))
         return list(rows)
 
-    async def get_repos(self, name: str) -> list[Repository]:
+    async def get_repos(self, name: str) -> list["Repository"]:
         stmt = select(Project).where(Project.name == name)
         project = await self.session.scalar(stmt)
         return project.repositories
