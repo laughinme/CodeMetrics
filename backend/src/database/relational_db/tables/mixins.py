@@ -23,11 +23,11 @@ class TimestampMixin(CreatedAtMixin):
     
 @declarative_mixin
 class ExternalTimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
-    updated_at: Mapped[datetime] = mapped_column(
+    updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )

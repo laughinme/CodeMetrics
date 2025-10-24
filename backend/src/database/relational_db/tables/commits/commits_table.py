@@ -33,8 +33,22 @@ class Commit(Base):
         nullable=True,
     )
 
-    message: Mapped[str] = mapped_column(Text, nullable=False)
+    author_name: Mapped[str] = mapped_column(String, nullable=False)
+    author_email: Mapped[str] = mapped_column(String, nullable=False)
+    committer_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    committer_email: Mapped[str | None] = mapped_column(String, nullable=True)
 
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    issues: Mapped[dict[str, str]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+    )
+    parents: Mapped[list[str]] = mapped_column(
+        ARRAY(String),
+        nullable=False,
+        default=list,
+    )
     branch_names: Mapped[list[str]] = mapped_column(
         ARRAY(String),
         nullable=False,
@@ -45,11 +59,16 @@ class Commit(Base):
         nullable=False,
         default=list,
     )
+    old_tag_names: Mapped[list[str]] = mapped_column(
+        ARRAY(String),
+        nullable=False,
+        default=list,
+    )
     added_lines: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     deleted_lines: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_merge_commit: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     diff_content: Mapped[str | None] = mapped_column(Text, nullable=True)
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -71,10 +90,10 @@ class Commit(Base):
         back_populates="committed_commits",
         lazy="selectin",
     )
-    branches: Mapped[list["Branch"]] = relationship(
-        back_populates="head_commit",
-        lazy="selectin",
-    )
+    # branches: Mapped[list["Branch"]] = relationship(
+    #     back_populates="head_commit",
+    #     lazy="selectin",
+    # )
     files: Mapped[list["CommitFile"]] = relationship(
         back_populates="commit",
         cascade="all, delete-orphan",

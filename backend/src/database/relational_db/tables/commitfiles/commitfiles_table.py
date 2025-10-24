@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String, Text, Uuid
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..table_base import Base
@@ -21,5 +21,7 @@ class CommitFile(Base):
     added_lines: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     deleted_lines: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     status: Mapped[str] = mapped_column(String, nullable=False)
+    patch: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_binary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     commit: Mapped["Commit"] = relationship(back_populates="files", lazy="selectin")

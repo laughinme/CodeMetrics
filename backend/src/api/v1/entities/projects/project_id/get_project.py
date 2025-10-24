@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Path, Depends
 
 from database.relational_db import User
 from core.security import auth_user
@@ -11,11 +11,12 @@ router = APIRouter()
 
 @router.get(
     path="/",
-    response_model=list[ProjectOut],
+    response_model=ProjectOut,
 )
-async def get_projects(
+async def get_project_by_id(
+    project_id: Annotated[int, Path(description="Project id")],
     _: Annotated[User, Depends(auth_user)],
     svc: Annotated[EntityService, Depends(get_entity_service)],
 ): 
-    projects = await svc.list_projects()
-    return projects
+    project = await svc.get_project(project_id=project_id)
+    return project

@@ -1,1 +1,2 @@
 from .repositories_table import Repository
+from .repositories_interface import RepositoryInterface
