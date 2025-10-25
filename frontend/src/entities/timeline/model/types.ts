@@ -11,10 +11,12 @@ export type TimelineDailyDatum = {
 
 export type TimelineHourlyDatum = {
   hour: number
-  count: number
+  sharePct: number
+  commits: number
 }
 
 export type TimelineWeekdayDatum = {
   weekday: string
-  count: number
+  sharePct: number
+  commits: number
 }
