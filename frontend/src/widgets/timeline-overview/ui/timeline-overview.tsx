@@ -11,6 +11,7 @@ import {
   TimelineHourlyPatternChart,
   TimelineWeekdayPatternChart,
   type TimelineRange,
+  type TimelineRangeOption,
 } from "@/entities/timeline"
 import { SectionCards, type SectionCard } from "@/shared/components/section-cards"
 import { Button } from "@/shared/components/ui/button"
@@ -25,11 +26,13 @@ import { getMetricsRangeBounds } from "@/shared/lib/metrics-range"
 
 type TimelineOverviewWidgetProps = {
   projectId: number | null
+  range: TimelineRange
+  onRangeChange: (range: TimelineRange) => void
+  rangeOptions?: TimelineRangeOption[]
+  since?: Date
+  until?: Date
   className?: string
 }
-
-const DEFAULT_RANGE: TimelineRange =
-  timelineRangeOptions[0]?.value ?? "1y"
 
 const numberFormatter = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 0,
@@ -39,25 +42,31 @@ const percentFormatter = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 1,
 })
 
-const weekdayFormatter = new Intl.DateTimeFormat("ru-RU", {
-  weekday: "short",
-})
-
 const periodFormatter = new Intl.DateTimeFormat("ru-RU", {
   day: "2-digit",
   month: "short",
 })
 
+const weekdayFormatter = new Intl.DateTimeFormat("ru-RU", {
+  weekday: "short",
+})
+
 export function TimelineOverviewWidget({
   projectId,
+  range,
+  onRangeChange,
+  rangeOptions = timelineRangeOptions,
+  since,
+  until,
   className,
 }: TimelineOverviewWidgetProps) {
-  const [range, setRange] = React.useState<TimelineRange>(DEFAULT_RANGE)
-
-  const { since, until } = React.useMemo(
+  const fallbackBounds = React.useMemo(
     () => getMetricsRangeBounds(range),
     [range],
   )
+
+  const effectiveSince = since ?? fallbackBounds.since
+  const effectiveUntil = until ?? fallbackBounds.until
 
   const {
     data,
@@ -66,16 +75,16 @@ export function TimelineOverviewWidget({
     isFetching,
     refetch,
   } = useMetricsTimelineSummary({
-    since,
-    until,
+    since: effectiveSince,
+    until: effectiveUntil,
     projectId,
   })
 
   const periodLabel = React.useMemo(() => {
-    const start = periodFormatter.format(since)
-    const end = periodFormatter.format(until)
+    const start = periodFormatter.format(effectiveSince)
+    const end = periodFormatter.format(effectiveUntil)
     return `${start} — ${end}`
-  }, [since, until])
+  }, [effectiveSince, effectiveUntil])
 
   const kpiCards = React.useMemo<SectionCard[]>(() => {
     if (!data) return []
@@ -88,8 +97,7 @@ export function TimelineOverviewWidget({
       typeof kpi.peakHour === "number"
         ? `${String(kpi.peakHour).padStart(2, "0")}:00`
         : "—"
-    const offhoursRaw = kpi.offhoursPct ?? 0
-    const offhoursPct = offhoursRaw > 1 ? offhoursRaw : offhoursRaw * 100
+    const offhoursPct = Math.max(0, kpi.offhoursPct ?? 0)
     const activeDays = series.daily.filter((point) => point.count > 0).length
 
     return [
@@ -132,36 +140,48 @@ export function TimelineOverviewWidget({
     if (!data) return []
     const map = new Map(data.series.daily.map((point) => [point.date, point.count]))
     const result: { date: string; count: number }[] = []
-    const cursor = new Date(since)
-    const end = new Date(until)
+    const startUtc = Date.UTC(
+      effectiveSince.getFullYear(),
+      effectiveSince.getMonth(),
+      effectiveSince.getDate(),
+    )
+    const endUtc = Date.UTC(
+      effectiveUntil.getFullYear(),
+      effectiveUntil.getMonth(),
+      effectiveUntil.getDate(),
+    )
+    const cursor = new Date(startUtc)
+    const endCursor = new Date(endUtc)
 
-    while (cursor <= end) {
+    while (cursor <= endCursor) {
       const iso = cursor.toISOString().slice(0, 10)
       result.push({
         date: iso,
         count: map.get(iso) ?? 0,
       })
-      cursor.setDate(cursor.getDate() + 1)
+      cursor.setUTCDate(cursor.getUTCDate() + 1)
     }
 
     return result
-  }, [data, since, until])
+  }, [data, effectiveSince, effectiveUntil])
 
   const hourlyData = React.useMemo(() => {
     if (!data) return []
     return data.series.byHour.map((point) => ({
       hour: point.hour,
-      count: point.commits,
+      sharePct: point.sharePct,
+      commits: point.commits,
     }))
   }, [data])
 
   const weekdayData = React.useMemo(() => {
     if (!data) return []
     return data.series.byWeekday.map((point) => {
-      const reference = new Date(Date.UTC(2024, 0, 1 + point.weekday))
+      const reference = new Date(Date.UTC(2024, 0, 7 + point.weekday))
       return {
         weekday: weekdayFormatter.format(reference),
-        count: point.commits,
+        sharePct: point.sharePct,
+        commits: point.commits,
       }
     })
   }, [data])
@@ -190,8 +210,8 @@ export function TimelineOverviewWidget({
         <TimelineTrendChart
           data={dailyData}
           range={range}
-          rangeOptions={timelineRangeOptions}
-          onRangeChange={setRange}
+          rangeOptions={rangeOptions}
+          onRangeChange={onRangeChange}
         />
         {isFetching ? (
           <div className="px-2 text-xs text-muted-foreground/70 lg:px-0">

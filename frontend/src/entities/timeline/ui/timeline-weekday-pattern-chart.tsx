@@ -24,11 +24,15 @@ type TimelineWeekdayPatternChartProps = {
 }
 
 const weekdayChartConfig = {
-  count: {
-    label: "Commits",
+  sharePct: {
+    label: "Доля коммитов",
     color: "#22c55e",
   },
 } satisfies ChartConfig
+
+const percentFormatter = new Intl.NumberFormat("ru-RU", {
+  maximumFractionDigits: 1,
+})
 
 export function TimelineWeekdayPatternChart({
   data,
@@ -61,8 +65,9 @@ export function TimelineWeekdayPatternChart({
               axisLine={false}
               tickLine={false}
               tickMargin={8}
-              allowDecimals={false}
+              domain={[0, 100]}
               tick={{ fill: "rgba(226,232,240,0.65)", fontSize: 11 }}
+              tickFormatter={(value: number) => `${percentFormatter.format(value)}%`}
             />
             <ChartTooltip
               cursor={{ fill: "rgba(34,197,94,0.12)" }}
@@ -70,14 +75,27 @@ export function TimelineWeekdayPatternChart({
                 <ChartTooltipContent
                   indicator="dot"
                   labelFormatter={(value) => `День: ${value}`}
-                  formatter={(value) => (
-                    <span className="font-semibold text-foreground">{value} коммитов</span>
-                  )}
+                  formatter={(value, _name, item) => {
+                    const rawValue = typeof value === "number" ? value : Number(value)
+                    const commits = item?.payload?.commits
+                    const percentLabel = `${percentFormatter.format(rawValue)}%`
+                    const commitsLabel =
+                      typeof commits === "number"
+                        ? ` · ${commits} коммитов`
+                        : ""
+
+                    return (
+                      <span className="font-semibold text-foreground">
+                        {percentLabel}
+                        {commitsLabel}
+                      </span>
+                    )
+                  }}
                 />
               }
             />
             <Bar
-              dataKey="count"
+              dataKey="sharePct"
               fill="url(#weekday-gradient)"
               radius={[6, 6, 0, 0]}
               barSize={28}
