@@ -30,7 +30,7 @@ import type { DeveloperRecommendation } from "@/entities/developer-profile/model
 
 const layoutStyle = {
   "--sidebar-width": "calc(var(--spacing) * 72)",
-  "--header-height": "calc(var(--spacing) * 14)",
+  "--header-height": "calc(var(--spacing) * 14 * 1.1)",
 } as CSSProperties
 
 const numberFormatter = new Intl.NumberFormat("ru-RU")

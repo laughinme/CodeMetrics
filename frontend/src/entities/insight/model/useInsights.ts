@@ -22,7 +22,7 @@ const queryKeyFromParams = (params: InsightsParams) =>
   [
     "insights",
     {
-      author_id: params.author_id ?? null,
+      authorId: params.authorId ?? null,
       authorIds: normalizeArray(params.authorIds),
       repoIds: normalizeArray(params.repoIds),
       projectId:

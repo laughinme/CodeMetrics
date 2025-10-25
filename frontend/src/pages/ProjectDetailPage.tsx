@@ -18,7 +18,7 @@ export default function ProjectDetailPage() {
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 14)",
+          "--header-height": "calc(var(--spacing) * 14 * 1.1)",
         } as CSSProperties
       }
     >

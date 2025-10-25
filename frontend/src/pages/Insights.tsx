@@ -46,7 +46,7 @@ export default function InsightsPage() {
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
+          "--header-height": "calc(var(--spacing) * 12 * 1.1)",
         } as CSSProperties
       }
     >

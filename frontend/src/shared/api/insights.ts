@@ -8,7 +8,7 @@ export type InsightDto = {
 }
 
 export type InsightsParams = {
-  author_id?: string
+  authorId?: string
   since?: string | Date
   until?: string | Date
   projectId?: number | null
@@ -24,6 +24,24 @@ const toDateOnly = (value?: string | Date) => {
 const normalizeArray = (values?: string[] | null) =>
   values && values.length ? values : undefined
 
+const mergeAuthorIds = (
+  primary?: string,
+  list?: string[] | null,
+): string[] | undefined => {
+  const result = new Set<string>()
+  if (primary) {
+    result.add(primary)
+  }
+  if (list?.length) {
+    list.forEach((value) => {
+      if (value) {
+        result.add(value)
+      }
+    })
+  }
+  return result.size ? Array.from(result) : undefined
+}
+
 const stripNil = <T extends Record<string, unknown>>(obj: T): T =>
   Object.fromEntries(
     Object.entries(obj).filter(
@@ -33,13 +51,12 @@ const stripNil = <T extends Record<string, unknown>>(obj: T): T =>
 
 export async function getInsights(params: InsightsParams) {
   const cleaned = stripNil({
-    author_id: params.author_id,
     since: toDateOnly(params.since),
     until: toDateOnly(params.until),
-    projectId:
+    project_id:
       typeof params.projectId === "number" ? params.projectId : undefined,
-    repoIds: normalizeArray(params.repoIds ?? undefined),
-    authorIds: normalizeArray(params.authorIds ?? undefined),
+    repo_ids: normalizeArray(params.repoIds ?? undefined),
+    author_ids: mergeAuthorIds(params.authorId, params.authorIds ?? undefined),
   })
 
   const { data } = await apiProtected.get<InsightDto[]>("/insights", {

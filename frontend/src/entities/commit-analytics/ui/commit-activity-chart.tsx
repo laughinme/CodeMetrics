@@ -48,6 +48,7 @@ type CommitActivityChartProps = {
   rangeLabel: string
   onRangeChange: (range: ActivityRange) => void
   rangeOptions: ActivityRangeOption[]
+  isEmpty?: boolean
 }
 
 export function CommitActivityChart({
@@ -56,6 +57,7 @@ export function CommitActivityChart({
   rangeLabel,
   onRangeChange,
   rangeOptions,
+  isEmpty = false,
 }: CommitActivityChartProps) {
   const gradient = useId()
   const gradientId = gradient.replace(/:/g, "")
@@ -71,7 +73,9 @@ export function CommitActivityChart({
               Total Commit Frequency
             </CardTitle>
             <CardDescription className="text-sm text-muted-foreground/80">
-              Total for {displayLabel.toLowerCase()}
+              {isEmpty
+                ? "Нет данных за выбранный период — отображаем пустой график."
+                : `Total for ${displayLabel.toLowerCase()}`}
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">

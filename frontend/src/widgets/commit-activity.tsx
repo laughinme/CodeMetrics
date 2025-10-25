@@ -73,6 +73,14 @@ export function CommitActivityWidget({
     }))
   }, [data])
 
+  const hasActivityData = activityData.length > 0
+  const chartData = React.useMemo<DailyCommitsDatum[]>(() => {
+    if (hasActivityData) {
+      return activityData
+    }
+    return buildFlatActivitySeries(since, until)
+  }, [activityData, hasActivityData, since, until])
+
   const rangeLabel =
     activityRangeOptions.find((option) => option.value === range)?.label ?? ""
 
@@ -89,24 +97,23 @@ export function CommitActivityWidget({
     )
   }
 
-  if (!activityData.length) {
-    return <CommitActivityEmptyState className={className} />
-  }
-
   return (
     <div className={className}>
       <CommitActivityChart
-        data={activityData}
+        data={chartData}
         range={range}
         rangeLabel={rangeLabel}
         onRangeChange={setRange}
         rangeOptions={activityRangeOptions}
+        isEmpty={!hasActivityData}
       />
-      {isFetching ? (
+      {(!hasActivityData || isFetching) && (
         <div className="mt-3 text-xs text-muted-foreground/70">
-          Обновляем данные…
+          {!hasActivityData
+            ? "Нет данных за выбранный период — показываем пустой график."
+            : "Обновляем данные…"}
         </div>
-      ) : null}
+      )}
     </div>
   )
 }
@@ -125,21 +132,6 @@ function CommitActivitySkeleton({ className }: { className?: string }) {
       <CardContent className="pb-6 pt-4">
         <Skeleton className="h-[280px] w-full rounded-2xl bg-muted/30" />
       </CardContent>
-    </Card>
-  )
-}
-
-function CommitActivityEmptyState({ className }: { className?: string }) {
-  return (
-    <Card className={cn(cardBaseClass, className)}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-foreground">
-          Total Commit Frequency
-        </CardTitle>
-        <CardDescription className="text-sm text-muted-foreground/80">
-          Нет данных за выбранный период.
-        </CardDescription>
-      </CardHeader>
     </Card>
   )
 }
@@ -180,4 +172,58 @@ function CommitActivityErrorState({
       </CardContent>
     </Card>
   )
+}
+
+const buildFlatActivitySeries = (since: Date, until: Date): DailyCommitsDatum[] => {
+  const isValidSince = since instanceof Date && !Number.isNaN(since.getTime())
+  const isValidUntil = until instanceof Date && !Number.isNaN(until.getTime())
+
+  if (!isValidSince || !isValidUntil) {
+    const fallbackDate = formatDateKey(new Date())
+    const next = new Date()
+    next.setDate(next.getDate() + 1)
+    return [
+      { date: fallbackDate, commits: 0 },
+      { date: formatDateKey(next), commits: 0 },
+    ]
+  }
+
+  const cursor = new Date(since)
+  const series: DailyCommitsDatum[] = []
+
+  while (cursor <= until) {
+    series.push({
+      date: formatDateKey(cursor),
+      commits: 0,
+    })
+    cursor.setDate(cursor.getDate() + 1)
+  }
+
+  if (series.length === 0) {
+    const fallbackDate = formatDateKey(since)
+    const nextDay = new Date(since)
+    nextDay.setDate(nextDay.getDate() + 1)
+    return [
+      { date: fallbackDate, commits: 0 },
+      { date: formatDateKey(nextDay), commits: 0 },
+    ]
+  }
+
+  if (series.length === 1) {
+    const nextDay = new Date(until)
+    nextDay.setDate(nextDay.getDate() + 1)
+    series.push({
+      date: formatDateKey(nextDay),
+      commits: 0,
+    })
+  }
+
+  return series
+}
+
+const formatDateKey = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
 }
