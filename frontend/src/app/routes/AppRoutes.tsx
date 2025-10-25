@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation, useRoutes, type Location, type RouteObject } from "react-router-dom";
 import DashboardPage from "@/pages/Dashboard";
 import DevelopersPage from "@/pages/Developers";
+import DeveloperProfilePage from "@/pages/DeveloperProfilePage";
 import InsightsPage from "@/pages/Insights";
 import AuthPage from "@/pages/auth/ui/AuthPage";
 import ProjectsPage from "@/pages/Projects";
@@ -57,6 +58,7 @@ export const routes: RouteObject[] = [
       { path: "timeline", element: <TimelinePage /> },
       { path: "repositories", element: <Navigate to="/timeline" replace /> },
       { path: "developers", element: <DevelopersPage /> },
+      { path: "developers/:developerId", element: <DeveloperProfilePage /> },
       { path: "insights", element: <InsightsPage /> }
     ]
   },

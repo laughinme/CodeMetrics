@@ -1,8 +1,13 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useCallback } from "react"
+import { useNavigate } from "react-router-dom"
 
-import { developerMetrics, DeveloperTable, type DeveloperMetricRow } from "@/entities/developer"
+import {
+  developerMetrics,
+  DeveloperTable,
+  type DeveloperMetricRow,
+} from "@/entities/developer"
 
 type DeveloperListWidgetProps = {
   data?: DeveloperMetricRow[]
@@ -15,7 +20,23 @@ function DeveloperListWidgetComponent({
   title,
   className,
 }: DeveloperListWidgetProps) {
-  return <DeveloperTable data={data} title={title} className={className} />
+  const navigate = useNavigate()
+
+  const handleSelect = useCallback(
+    (developer: DeveloperMetricRow) => {
+      navigate(`/developers/${developer.id}`)
+    },
+    [navigate],
+  )
+
+  return (
+    <DeveloperTable
+      data={data}
+      title={title}
+      className={className}
+      onSelect={handleSelect}
+    />
+  )
 }
 
 export const DeveloperListWidget = memo(DeveloperListWidgetComponent)

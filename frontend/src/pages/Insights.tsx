@@ -30,30 +30,7 @@ export default function InsightsPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader
-          title="Insights"
-          description="Фильтры применяются ко всем виджетам на странице"
-          filters={
-            <>
-              <button className="flex h-11 items-center gap-2 rounded-full border border-border/30 bg-background/60 px-4 text-sm font-medium text-foreground/85 shadow-inner transition hover:bg-background/70">
-                <GitBranch className="h-4 w-4 text-muted-foreground" />
-                {insightFilters.project.label}
-              </button>
-              <button className="flex h-11 items-center gap-2 rounded-full border border-border/30 bg-background/60 px-4 text-sm font-medium text-foreground/85 shadow-inner transition hover:bg-background/70">
-                <CalendarRange className="h-4 w-4 text-muted-foreground" />
-                {insightFilters.period.label}
-              </button>
-            </>
-          }
-          actions={
-            <Button
-              size="lg"
-              className="rounded-full bg-primary px-5 py-2 text-sm font-semibold shadow-lg shadow-primary/25 hover:bg-primary/90"
-            >
-              <Sparkles className="h-4 w-4" />
-              New Analysis
-            </Button>
-          }
-        />
+          title="Insights"/>
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col">
             <div className="flex flex-col gap-6 py-6">

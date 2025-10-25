@@ -1,6 +1,6 @@
 "use client"
 
-import { memo } from "react"
+import { memo, type KeyboardEvent } from "react"
 
 import { cn } from "@/shared/lib/utils"
 import { Badge, badgeVariants } from "@/shared/components/ui/badge"
@@ -43,13 +43,22 @@ type DeveloperTableProps = {
   data: DeveloperMetricRow[]
   title?: string
   className?: string
+  onSelect?: (developer: DeveloperMetricRow) => void
 }
 
 function DeveloperTableComponent({
   data,
   title = "Обзор производительности разработчиков",
   className,
+  onSelect,
 }: DeveloperTableProps) {
+  const handleKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, developer: DeveloperMetricRow) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      onSelect?.(developer)
+    }
+  }
+
   return (
     <Card
       className={cn(
@@ -77,7 +86,18 @@ function DeveloperTableComponent({
             {data.map((developer) => (
               <TableRow
                 key={developer.id}
-                className="border-border/10 hover:bg-background/40"
+                className={cn(
+                  "border-border/10 hover:bg-background/40",
+                  onSelect ? "cursor-pointer transition" : undefined
+                )}
+                role={onSelect ? "button" : undefined}
+                tabIndex={onSelect ? 0 : undefined}
+                onClick={onSelect ? () => onSelect(developer) : undefined}
+                onKeyDown={
+                  onSelect
+                    ? (event) => handleKeyDown(event, developer)
+                    : undefined
+                }
               >
                 <TableCell className="pl-2 pr-4 text-foreground/90">
                   {developer.name}

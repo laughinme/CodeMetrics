@@ -32,10 +32,7 @@ export const insightMetrics: InsightMetric[] = [
     subtitle: "Темп за последнюю неделю vs предыдущая.",
     icon: GitCommit,
     tone: "positive",
-    status: {
-      label: "+222% WoW",
-      tone: "positive",
-    },
+
   },
   {
     id: "author-concentration",
@@ -44,10 +41,7 @@ export const insightMetrics: InsightMetric[] = [
     subtitle: "Доля коммитов от трёх самых активных авторов.",
     icon: Users,
     tone: "warning",
-    status: {
-      label: "топ-1: 58%",
-      tone: "warning",
-    },
+
   },
   
   {
@@ -65,10 +59,7 @@ export const insightMetrics: InsightMetric[] = [
     subtitle: "Самая длинная непрерывная серия дней с активностью.",
     icon: Timer,
     tone: "positive",
-    status: {
-      label: "стабильно",
-      tone: "info",
-    },
+
   },
 ]
 
