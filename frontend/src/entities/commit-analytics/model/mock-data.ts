@@ -7,10 +7,10 @@ import {
 } from "./types"
 
 export const commitTimeRangeOptions: TimeRangeOption[] = [
-  { value: "1d", label: "1 день" },
-  { value: "7d", label: "7 дней" },
-  { value: "30d", label: "30 дней" },
-  { value: "all", label: "Все время" },
+  { value: "all", label: "All time" },
+  { value: "30d", label: "30 days" },
+  { value: "7d", label: "7 days" },
+  { value: "1d", label: "1 day" },
 ]
 
 const authorDataset: Record<CommitTimeRange, AuthorDatum[]> = {

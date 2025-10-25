@@ -63,7 +63,7 @@ export function CommitCardComponent({ commit, className }: CommitCardProps) {
       )}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-1 items-start gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
           <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
             {commit.isMerge ? (
               <GitMerge className="size-5" />
@@ -71,9 +71,12 @@ export function CommitCardComponent({ commit, className }: CommitCardProps) {
               <GitCommit className="size-5" />
             )}
           </div>
-          <div className="flex flex-1 flex-col gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-semibold text-foreground/95">
+              <h3
+                className="min-w-0 flex-1 truncate text-base font-semibold text-foreground/95"
+                title={title}
+              >
                 {title}
               </h3>
               {commit.isMerge && (
@@ -86,13 +89,13 @@ export function CommitCardComponent({ commit, className }: CommitCardProps) {
               )}
             </div>
             {description && (
-              <p className="whitespace-pre-line text-sm text-muted-foreground/80">
+              <p className="line-clamp-4 break-words whitespace-pre-line text-sm text-muted-foreground/80">
                 {description}
               </p>
             )}
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1 text-right">
+        <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
             {committedAtLabel}
           </span>
@@ -129,9 +132,6 @@ export function CommitCardComponent({ commit, className }: CommitCardProps) {
           <span className="flex items-center gap-1 text-muted-foreground/80">
             <FileDiff className="size-4" />
             {commit.filesChanged} файлов
-          </span>
-          <span className="flex items-center gap-1 rounded-full border border-border/50 bg-background/60 px-3 py-1 font-mono text-[11px] tracking-wider text-foreground/80">
-            {shaShort}
           </span>
         </div>
       </div>

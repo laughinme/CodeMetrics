@@ -9,9 +9,9 @@ import type {
 } from "./types"
 
 const BASE_RANGE_OPTIONS: TimelineRangeOption[] = [
-  { value: "90d", label: "Last 3 months" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "7d", label: "Last 7 days" },
+  { value: "90d", label: "3 months" },
+  { value: "30d", label: "30 days" },
+  { value: "7d", label: "7 days" },
 ]
 
 const TOTAL_DAYS = 120

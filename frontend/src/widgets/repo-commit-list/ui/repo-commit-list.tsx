@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 import {
@@ -36,6 +36,40 @@ function RepoCommitListWidgetComponent({
     error,
     refetch,
   } = useRepoCommits(normalizedRepoId, params);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    if (!hasNextPage) return;
+
+    let blocked = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        if (entry.isIntersecting && !blocked && !isFetchingNextPage) {
+          blocked = true;
+          fetchNextPage().finally(() => {
+            blocked = false;
+          });
+        }
+      },
+      {
+        root: null,
+        rootMargin: "200px 0px 200px 0px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   if (!normalizedRepoId) {
     return (
@@ -107,17 +141,11 @@ function RepoCommitListWidgetComponent({
       {commits.map((commit) => (
         <CommitCard key={commit.sha} commit={commit} />
       ))}
-      {hasNextPage && (
-        <Button
-          type="button"
-          onClick={() => fetchNextPage()}
-          disabled={isFetchingNextPage}
-          variant="outline"
-          className="ml-auto flex items-center gap-2 rounded-full border-border/40 bg-background/60 px-5 py-2 text-sm font-medium text-foreground/80 transition hover:bg-background/80"
-        >
-          {isFetchingNextPage && <Loader2 className="size-4 animate-spin" />}
-          Загрузить ещё
-        </Button>
+      <div ref={sentinelRef} className="h-1 w-full" />
+      {hasNextPage && isFetchingNextPage && (
+        <div className="flex justify-center py-4 text-sm text-muted-foreground/70">
+          <Loader2 className="size-4 animate-spin" />
+        </div>
       )}
     </div>
   );
