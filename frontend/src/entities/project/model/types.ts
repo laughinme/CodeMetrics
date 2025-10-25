@@ -6,3 +6,4 @@ export type Project = {
   lastActivity: string
   description: string | null
 }
+

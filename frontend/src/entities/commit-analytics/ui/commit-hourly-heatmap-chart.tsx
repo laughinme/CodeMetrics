@@ -5,7 +5,6 @@ import * as React from "react"
 import { cn } from "@/shared/lib/utils"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -37,6 +36,7 @@ import type {
 
 const legendLevels = [0, 1, 2, 3, 4] as const
 const CELL_SIZE = 14
+const COLUMN_GAP = 3
 
 const heatmapPaletteStyles = {
   "--heatmap-color-0": "#ffffff",
@@ -94,9 +94,16 @@ export function CommitHourlyHeatmapChart({
   onRangeChange,
   rangeOptions,
 }: CommitHourlyHeatmapChartProps) {
-  const { weeks, maxCommits, monthLabels } = React.useMemo(() => {
+  const scrollContainerRef = React.useRef<HTMLDivElement | null>(null)
+
+  const { weeks, maxCommits, monthLabels, maxWeekIndex } = React.useMemo(() => {
     if (data.length === 0) {
-      return { weeks: [] as CalendarCell[][], maxCommits: 0, monthLabels: [] as string[] }
+      return {
+        weeks: [] as CalendarCell[][],
+        maxCommits: 0,
+        monthLabels: [] as string[],
+        maxWeekIndex: 0,
+      }
     }
 
     const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date))
@@ -108,6 +115,9 @@ export function CommitHourlyHeatmapChart({
 
     const weeks: CalendarCell[][] = []
     let cursor = new Date(start)
+    let maxCommitsValue = 0
+    let maxWeekIndex = 0
+    let weekIndex = 0
 
     while (cursor <= end) {
       const week: CalendarCell[] = []
@@ -116,15 +126,17 @@ export function CommitHourlyHeatmapChart({
         const commits = map.get(iso) ?? 0
         const isPlaceholder = cursor < firstDate || cursor > lastDate
         week.push({ date: iso, commits, isPlaceholder })
+        if (!isPlaceholder && commits > maxCommitsValue) {
+          maxCommitsValue = commits
+          maxWeekIndex = weekIndex
+        }
         cursor.setDate(cursor.getDate() + 1)
       }
       weeks.push(week)
+      weekIndex += 1
     }
 
-    const maxCommits = sorted.reduce(
-      (max, item) => Math.max(max, item.commits),
-      0
-    )
+    const maxCommits = maxCommitsValue
 
     let previousMonth = -1
     const monthLabels = weeks.map((week) => {
@@ -137,8 +149,16 @@ export function CommitHourlyHeatmapChart({
       return ""
     })
 
-    return { weeks, maxCommits, monthLabels }
+    return { weeks, maxCommits, monthLabels, maxWeekIndex }
   }, [data])
+
+  React.useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container || weeks.length === 0) return
+    const columnWidth = CELL_SIZE + COLUMN_GAP
+    const targetOffset = Math.max(0, maxWeekIndex * columnWidth)
+    container.scrollLeft = targetOffset
+  }, [maxWeekIndex, weeks.length])
 
   const getLevel = React.useCallback(
     (commits: number) => {
@@ -158,70 +178,72 @@ export function CommitHourlyHeatmapChart({
       )}
       style={heatmapPaletteStyles}
     >
-      <CardHeader className="flex flex-col gap-2 pb-0">
-        <div className="flex flex-col gap-1">
-          <CardTitle className="text-lg font-semibold text-foreground">
-            Календарь коммитов
-          </CardTitle>
-          <CardDescription className="text-sm text-muted-foreground/80">
-            Период: {rangeLabel}
-          </CardDescription>
-        </div>
-        <CardAction className="mt-2">
-          <ToggleGroup
-            type="single"
-            value={range}
-            onValueChange={(value) => {
-              if (value) {
-                onRangeChange(value as CommitTimeRange)
-              }
-            }}
-            variant="outline"
-            className="hidden h-11 items-center gap-0 rounded-full border border-border/30 bg-background/40 p-1 text-sm shadow-inner @[767px]/card:flex"
-          >
-            {rangeOptions.map((option) => (
-              <ToggleGroupItem
-                key={option.value}
-                value={option.value}
-                className={cn(
-                  "px-4 py-2 font-medium transition",
-                  "rounded-full border border-transparent text-muted-foreground/80",
-                  "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:border-white/20",
-                  "data-[state=off]:hover:bg-background/20 data-[state=off]:hover:text-foreground/80",
-                  "focus-visible:ring-0 focus-visible:ring-offset-0"
-                )}
-              >
-                {option.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <Select
-            value={range}
-            onValueChange={(value) => onRangeChange(value as CommitTimeRange)}
-          >
-            <SelectTrigger
-              className="flex h-11 w-44 items-center justify-between rounded-full border border-border/30 bg-background/50 px-4 text-sm font-medium text-foreground/80 shadow-inner @[767px]/card:hidden"
-              size="sm"
-              aria-label="Выберите период"
+      <CardHeader className="pb-0">
+        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <CardTitle className="text-lg font-semibold text-foreground">
+              Commit calendar
+            </CardTitle>
+            <CardDescription className="text-sm text-muted-foreground/80">
+              Period: {rangeLabel}
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <ToggleGroup
+              type="single"
+              value={range}
+              onValueChange={(value) => {
+                if (value) {
+                  onRangeChange(value as CommitTimeRange)
+                }
+              }}
+              variant="outline"
+              className="hidden h-11 items-center gap-0 rounded-full border border-border/30 bg-background/40 p-1 text-sm shadow-inner md:flex"
             >
-              <SelectValue placeholder="Выберите период" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
               {rangeOptions.map((option) => (
-                <SelectItem
+                <ToggleGroupItem
                   key={option.value}
                   value={option.value}
-                  className="rounded-lg"
+                  className={cn(
+                    "px-4 py-2 font-medium transition",
+                    "rounded-full border border-transparent text-muted-foreground/80",
+                    "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:border-white/20",
+                    "data-[state=off]:hover:bg-background/20 data-[state=off]:hover:text-foreground/80",
+                    "focus-visible:ring-0 focus-visible:ring-offset-0"
+                  )}
                 >
                   {option.label}
-                </SelectItem>
+                </ToggleGroupItem>
               ))}
-            </SelectContent>
-          </Select>
-        </CardAction>
+            </ToggleGroup>
+            <Select
+              value={range}
+              onValueChange={(value) => onRangeChange(value as CommitTimeRange)}
+            >
+              <SelectTrigger
+                className="flex h-11 w-44 items-center justify-between rounded-full border border-border/30 bg-background/50 px-4 text-sm font-medium text-foreground/80 shadow-inner md:hidden"
+                size="sm"
+                aria-label="Select period"
+              >
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
+                {rangeOptions.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    className="rounded-lg"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="px-2 pb-6 pt-6 sm:px-6">
-        <div className="flex flex-col gap-4">
+      <CardContent className="px-2 pb-6 pt-4 sm:px-6">
+        <div className="mt-4 flex flex-col gap-4">
           <TooltipProvider>
             <div className="flex gap-3">
               <div className="flex w-[48px] flex-col gap-[3px] text-xs font-medium text-muted-foreground/80">
@@ -242,7 +264,7 @@ export function CommitHourlyHeatmapChart({
                   </span>
                 ))}
               </div>
-              <div className="flex-1 overflow-x-auto">
+              <div className="flex-1 overflow-x-auto" ref={scrollContainerRef}>
                 <div className="flex flex-col gap-[6px]">
                   <div className="flex gap-[3px]">
                     {weeks.map((_, index) => (

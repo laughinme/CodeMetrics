@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     title='Hackathon',
-    debug=True
+    debug=config.DEBUG_MODE
 )
 
 # Mount static
@@ -58,10 +58,11 @@ async def ping():
 allowed_origins = [
     "http://localhost:5173",
     "https://localhost:5173",
+    "https://68fb161ab7e72a5feaf4dc52--codemetricsproto.netlify.app",
 ]
 
-if config.SITE_URL:
-    allowed_origins.append(config.SITE_URL)
+# if config.SITE_URL:
+#     allowed_origins.append(config.SITE_URL)
 
 app.add_middleware(
     CORSMiddleware,

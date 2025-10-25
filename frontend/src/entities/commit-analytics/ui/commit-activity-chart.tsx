@@ -9,15 +9,13 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/shared/components/ui/chart"
-import { cn } from "@/shared/lib/utils"
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card"
+  metricsRangeOptions,
+  type MetricsRangeOption,
+  type MetricsRangeValue,
+} from "@/shared/lib/metrics-range"
+import { cn } from "@/shared/lib/utils"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -38,18 +36,11 @@ const dailyCommitsChartConfig = {
   },
 } satisfies ChartConfig
 
-export type ActivityRange = "90d" | "30d" | "7d"
+export type ActivityRange = MetricsRangeValue
 
-export type ActivityRangeOption = {
-  value: ActivityRange
-  label: string
-}
+export type ActivityRangeOption = MetricsRangeOption
 
-export const activityRangeOptions: ActivityRangeOption[] = [
-  { value: "90d", label: "Last 3 months" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "7d", label: "Last 7 days" },
-]
+export const activityRangeOptions: ActivityRangeOption[] = metricsRangeOptions
 
 type CommitActivityChartProps = {
   data: DailyCommitsDatum[]
@@ -57,6 +48,7 @@ type CommitActivityChartProps = {
   rangeLabel: string
   onRangeChange: (range: ActivityRange) => void
   rangeOptions: ActivityRangeOption[]
+  isEmpty?: boolean
 }
 
 export function CommitActivityChart({
@@ -65,6 +57,7 @@ export function CommitActivityChart({
   rangeLabel,
   onRangeChange,
   rangeOptions,
+  isEmpty = false,
 }: CommitActivityChartProps) {
   const gradient = useId()
   const gradientId = gradient.replace(/:/g, "")
@@ -73,72 +66,76 @@ export function CommitActivityChart({
 
   return (
     <Card className="h-full rounded-3xl border-border/30 bg-card/80 shadow-[0_10px_60px_-28px_rgba(76,81,255,0.35)] backdrop-blur">
-      <CardHeader className="flex flex-col gap-2 pb-0">
-        <div className="flex flex-col gap-1">
-          <CardTitle className="text-lg font-semibold text-foreground">
-            Total Commit Frequency
-          </CardTitle>
-          <CardDescription className="text-sm text-muted-foreground/80">
-            Total for {displayLabel.toLowerCase()}
-          </CardDescription>
-        </div>
-        <CardAction className="mt-2">
-          <ToggleGroup
-            type="single"
-            value={range}
-            onValueChange={(value) => {
-              if (value) {
-                onRangeChange(value as ActivityRange)
-              }
-            }}
-            variant="outline"
-            className="hidden h-12 items-center gap-0 rounded-full border border-border/30 bg-background/60 p-1 text-sm shadow-inner @[767px]/card:flex"
-          >
-            {rangeOptions.map((option) => (
-              <ToggleGroupItem
-                key={option.value}
-                value={option.value}
-                className={cn(
-                  "px-5 py-2 font-medium transition",
-                  "rounded-full border border-transparent text-muted-foreground/80",
-                  "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:border-white/20",
-                  "data-[state=off]:hover:bg-background/20 data-[state=off]:hover:text-foreground/80",
-                  "focus-visible:ring-0 focus-visible:ring-offset-0"
-                )}
-              >
-                {option.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <Select
-            value={range}
-            onValueChange={(value) => onRangeChange(value as ActivityRange)}
-          >
-            <SelectTrigger
-              className="flex h-11 w-48 items-center justify-between rounded-full border border-border/30 bg-background/60 px-4 text-sm font-medium text-foreground/80 shadow-inner @[767px]/card:hidden"
-              size="sm"
-              aria-label="Select a period"
+      <CardHeader className="pb-0">
+        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <CardTitle className="text-lg font-semibold text-foreground">
+              Total Commit Frequency
+            </CardTitle>
+            <CardDescription className="text-sm text-muted-foreground/80">
+              {isEmpty
+                ? "Нет данных за выбранный период — отображаем пустой график."
+                : `Total for ${displayLabel.toLowerCase()}`}
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <ToggleGroup
+              type="single"
+              value={range}
+              onValueChange={(value) => {
+                if (value) {
+                  onRangeChange(value as ActivityRange)
+                }
+              }}
+              variant="outline"
+              className="hidden h-12 items-center gap-0 rounded-full border border-border/30 bg-background/60 p-1 text-sm shadow-inner md:flex"
             >
-              <SelectValue placeholder={displayLabel} />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
               {rangeOptions.map((option) => (
-                <SelectItem
+                <ToggleGroupItem
                   key={option.value}
                   value={option.value}
-                  className="rounded-lg"
+                  className={cn(
+                    "px-5 py-2 font-medium transition",
+                    "rounded-full border border-transparent text-muted-foreground/80",
+                    "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:border-white/20",
+                    "data-[state=off]:hover:bg-background/20 data-[state=off]:hover:text-foreground/80",
+                    "focus-visible:ring-0 focus-visible:ring-offset-0"
+                  )}
                 >
                   {option.label}
-                </SelectItem>
+                </ToggleGroupItem>
               ))}
-            </SelectContent>
-          </Select>
-        </CardAction>
+            </ToggleGroup>
+            <Select
+              value={range}
+              onValueChange={(value) => onRangeChange(value as ActivityRange)}
+            >
+              <SelectTrigger
+                className="flex h-11 w-48 items-center justify-between rounded-full border border-border/30 bg-background/60 px-4 text-sm font-medium text-foreground/80 shadow-inner md:hidden"
+                size="sm"
+                aria-label="Select a period"
+              >
+                <SelectValue placeholder={displayLabel} />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
+                {rangeOptions.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    className="rounded-lg"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="px-2 pb-6 pt-6 sm:px-6">
+      <CardContent className="px-2 pb-6 pt-4 sm:px-6">
         <ChartContainer
           config={dailyCommitsChartConfig}
-          className="aspect-auto h-[340px] w-full"
+          className="mt-4 aspect-auto h-[340px] w-full"
         >
           <AreaChart
             data={data}

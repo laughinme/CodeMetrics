@@ -1,9 +1,8 @@
-export type TimelineRange = "90d" | "30d" | "7d"
+import type { MetricsRangeOption, MetricsRangeValue } from "@/shared/lib/metrics-range"
 
-export type TimelineRangeOption = {
-  value: TimelineRange
-  label: string
-}
+export type TimelineRange = MetricsRangeValue
+
+export type TimelineRangeOption = MetricsRangeOption
 
 export type TimelineDailyDatum = {
   date: string
@@ -12,10 +11,12 @@ export type TimelineDailyDatum = {
 
 export type TimelineHourlyDatum = {
   hour: number
-  count: number
+  sharePct: number
+  commits: number
 }
 
 export type TimelineWeekdayDatum = {
   weekday: string
-  count: number
+  sharePct: number
+  commits: number
 }

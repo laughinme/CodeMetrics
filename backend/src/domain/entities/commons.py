@@ -1,7 +1,6 @@
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, EmailStr
-from pydantic.generics import GenericModel
 
 
 class ProjectRef(BaseModel):
@@ -16,11 +15,11 @@ class RepoRef(BaseModel):
 class AuthorRef(BaseModel):
     id: str
     name: str
-    email: Optional[EmailStr] = None
+    email: EmailStr | None = None
 
 
 T = TypeVar("T")
 
-class Page(GenericModel, Generic[T]):
-    items: List[T]
+class Page(BaseModel, Generic[T]):
+    items: list[T]
     next_cursor: str | None = None

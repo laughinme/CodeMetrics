@@ -26,9 +26,9 @@ class Project(Base, ExternalTimestampMixin):
     full_name: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     
-    is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
-    lfs_allow: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
-    is_favorite: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    lfs_allow: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_favorite: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     
     parent_id: Mapped[int | None] = mapped_column(
         ForeignKey("projects.id", ondelete="SET NULL"),

@@ -8,3 +8,5 @@ from .commitfiles import *
 from .commits import *
 from .projects import *
 from .repositories import *
+from .aggr_commits import *
+from .aggr_files import *

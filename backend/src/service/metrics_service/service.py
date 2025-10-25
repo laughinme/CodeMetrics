@@ -1,12 +1,12 @@
 import logging
-
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+from uuid import UUID
 from urllib.parse import quote
 
 from ..api_service.external_api import ExternalAPIClient
 from .cache import CacheManager
-from .exceptions import MetricsValidationError, MetricsAPIError, MetricsAnalysisError
+from .exceptions import MetricsValidationError, MetricsAPIError
 from .analyzers import BranchAnalyzer, CommitAnalyzer, DiffAnalyzer
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,260 @@ class MetricsService:
         self._commit_analyzer = CommitAnalyzer()
         self._diff_analyzer = DiffAnalyzer()
 
+    async def get_kpi_metrics(
+        self,
+        since: datetime,
+        until: datetime,
+        project_id: int | None = None,
+        repo_id: UUID | None = None,
+        author_id: UUID | None = None
+    ) -> Dict[str, Any]:
+        """
+        Get key performance indicators including commits count, active developers, 
+        repositories and quality metrics for the specified period and filters.
+        """
+        try:
+            if since >= until:
+                raise MetricsValidationError("Start date must be before end date")
+            
+            # Build query parameters
+            params = {
+                "since": since.isoformat(),
+                "until": until.isoformat()
+            }
+            
+            if project_id:
+                params["projectId"] = str(project_id)
+            if repo_id:
+                params["repoId"] = str(repo_id)
+            if author_id:
+                params["authorId"] = str(author_id)
+            
+            # TODO: Implement actual API calls to fetch and calculate KPIs
+            # This is a placeholder implementation with realistic data structure
+            kpi_data = {
+                "commits_count": 150,
+                "active_developers": 8,
+                "active_repositories": 3,
+                "avg_commit_size": {
+                    "mean": 45.2,
+                    "median": 32.0
+                },
+                "message_quality": {
+                    "avg_length": 52.7,
+                    "short_percentage": 15.3
+                },
+                "period": {
+                    "since": since.isoformat(),
+                    "until": until.isoformat()
+                },
+                "filters": {
+                    "project_id": project_id,
+                    "repository_id": repo_id if repo_id else None,
+                    "author_id": author_id if author_id else None
+                }
+            }
+            
+            return kpi_data
+            
+        except MetricsValidationError:
+            raise
+        except Exception as exc:
+            logger.error(f"Failed to fetch KPI metrics: {exc}")
+            raise MetricsAPIError(f"KPI metrics unavailable: {exc}") from exc
+
+    async def get_latest_commits(
+        self,
+        project_key: Optional[str] = None,
+        repo: Optional[UUID] = None,
+        author: Optional[UUID] = None,
+        limit: int = 20,
+        cursor: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Get paginated list of recent commits with file statistics and metadata.
+        """
+        try:
+            if limit < 1 or limit > 100:
+                raise MetricsValidationError("Limit must be between 1 and 100")
+            
+            # Build query parameters
+            params: Dict[str, Any] = {"limit": limit}
+            
+            if project_key:
+                params["projectKey"] = project_key
+            if repo:
+                params["repoId"] = str(repo)
+            if author:
+                params["authorId"] = str(author)
+            if cursor:
+                params["cursor"] = cursor
+            
+            # TODO: Implement actual API call to fetch commits
+            # Placeholder implementation with realistic data structure
+            commits_data = {
+                "items": [
+                    {
+                        "sha": "abc123def456",
+                        "repo": {
+                            "project_key": project_key or "PROJ",
+                            "name": "repository-name"
+                        },
+                        "author": {
+                            "id": author or UUID("12345678-1234-1234-1234-123456789abc"),
+                            "name": "John Developer",
+                            "email": "john@example.com"
+                        },
+                        "committer": {
+                            "id": author or UUID("12345678-1234-1234-1234-123456789abc"),
+                            "name": "John Developer", 
+                            "email": "john@example.com"
+                        },
+                        "committed_at": datetime.now().isoformat(),
+                        "message": "Fix issue with user authentication",
+                        "is_merge": False,
+                        "added_lines": 15,
+                        "deleted_lines": 3,
+                        "files_changed": 2
+                    }
+                    for i in range(min(limit, 5))  # Generate sample data
+                ],
+                "next_cursor": "next_page_token" if limit >= 5 else None
+            }
+            
+            return commits_data
+            
+        except MetricsValidationError:
+            raise
+        except Exception as exc:
+            logger.error(f"Failed to fetch latest commits: {exc}")
+            raise MetricsAPIError(f"Latest commits unavailable: {exc}") from exc
+
+    async def get_daily_commits(
+        self,
+        since: datetime,
+        until: datetime,
+        project_key: Optional[str] = None,
+        repo: Optional[UUID] = None,
+        author: Optional[UUID] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get commits aggregated by day for the specified period and filters.
+        Returns list of daily commit points with date and count.
+        """
+        try:
+            if since >= until:
+                raise MetricsValidationError("Start date must be before end date")
+            
+            # Build query parameters
+            params = {
+                "since": since.isoformat(),
+                "until": until.isoformat(),
+                "group_by": "day"
+            }
+            
+            if project_key:
+                params["projectKey"] = project_key
+            if repo:
+                params["repoId"] = str(repo)
+            if author:
+                params["authorId"] = str(author)
+            
+            # TODO: Implement actual API call and aggregation
+            # Placeholder implementation - generate sample daily data
+            daily_commits = []
+            current_date = since.date()
+            end_date = until.date()
+            day_count = 0
+            
+            while current_date <= end_date:
+                # Generate some sample data with realistic patterns
+                count = 0
+                if day_count % 3 == 0:  # Every 3rd day has more activity
+                    count = 8
+                elif day_count % 7 != 6:  # Skip Sundays
+                    count = 3
+                
+                daily_commits.append({
+                    "date": datetime.combine(current_date, datetime.min.time()),
+                    "count": count
+                })
+                current_date += timedelta(days=1)
+                day_count += 1
+            
+            return daily_commits
+            
+        except MetricsValidationError:
+            raise
+        except Exception as exc:
+            logger.error(f"Failed to fetch daily commits: {exc}")
+            raise MetricsAPIError(f"Daily commits data unavailable: {exc}") from exc
+
+    async def get_commits_by_hour(
+        self,
+        since: datetime,
+        until: datetime,
+        project_key: Optional[str] = None,
+        repo: Optional[UUID] = None,
+        author: Optional[UUID] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get commits aggregated by hour of day (0-23) for heatmap visualization.
+        Returns list of hourly commit points with hour and count.
+        """
+        try:
+            if since >= until:
+                raise MetricsValidationError("Start date must be before end date")
+            
+            # Build query parameters
+            params = {
+                "since": since.isoformat(),
+                "until": until.isoformat(),
+                "group_by": "hour"
+            }
+            
+            if project_key:
+                params["projectKey"] = project_key
+            if repo:
+                params["repoId"] = str(repo)
+            if author:
+                params["authorId"] = str(author)
+            
+            # TODO: Implement actual API call and aggregation
+            # Placeholder implementation - generate sample hourly distribution
+            hourly_commits = []
+            
+            # Typical work hours pattern
+            work_hours_peak = [9, 10, 11, 14, 15, 16]
+            work_hours_moderate = [8, 12, 13, 17, 18]
+            
+            for hour in range(24):
+                count = 0
+                if hour in work_hours_peak:
+                    count = 25  # Peak hours
+                elif hour in work_hours_moderate:
+                    count = 12  # Moderate hours
+                elif 19 <= hour <= 22:
+                    count = 8   # Evening work
+                elif hour >= 23 or hour <= 3:
+                    count = 2   # Late night
+                else:
+                    count = 5   # Early morning
+                
+                hourly_commits.append({
+                    "hour": hour,
+                    "count": count
+                })
+            
+            return hourly_commits
+            
+        except MetricsValidationError:
+            raise
+        except Exception as exc:
+            logger.error(f"Failed to fetch commits by hour: {exc}")
+            raise MetricsAPIError(f"Hourly commits data unavailable: {exc}") from exc
+
+    # Existing methods from the original class...
     async def get_projects_summary(self) -> Dict[str, Any]:
         try:
             data = await self._api.get_json("/projects")
