@@ -26,11 +26,13 @@ class CommitInterface:
         model: CommitModel,
         author: Author | None,
         committer: Author | None,
-    ) -> Commit:
+    ) -> tuple[Commit, bool]:
         commit = await self.session.get(Commit, model.sha)
+        created = False
         if commit is None:
             commit = Commit(sha=model.sha, repo_id=repository.id)
             self.session.add(commit)
+            created = True
         else:
             commit.repo_id = repository.id
 
@@ -54,7 +56,7 @@ class CommitInterface:
         commit.old_tag_names = model.old_tags or []
         commit.is_merge_commit = len(commit.parents) > 1 or commit.is_merge_commit
 
-        return commit
+        return commit, created
 
     async def apply_diff_stats(
         self,
