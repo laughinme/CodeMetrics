@@ -1,6 +1,10 @@
-"use client"
-
-import { memo, useMemo } from "react"
+import { memo } from "react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  GitCommit,
+  Loader2,
+} from "lucide-react"
 
 import { cn } from "@/shared/lib/utils"
 import {
@@ -9,46 +13,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/components/ui/table"
+import { Badge } from "@/shared/components/ui/badge"
+import { Button } from "@/shared/components/ui/button"
+import { formatDateTime, formatRelativeTimeFromNow } from "@/shared/lib/date"
 
 import type { DeveloperCommitItem } from "../model/types"
 
 type DeveloperCommitsTableProps = {
   commits: DeveloperCommitItem[]
   className?: string
+  page?: number
+  hasNextPage?: boolean
+  hasPreviousPage?: boolean
+  onNextPage?: () => void
+  onPreviousPage?: () => void
+  isLoading?: boolean
 }
-
-const dateTimeFormatter = new Intl.DateTimeFormat("ru-RU", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-})
-
-const formatDate = (value: string) => dateTimeFormatter.format(new Date(value))
 
 function DeveloperCommitsTableComponent({
   commits,
   className,
+  page = 1,
+  hasNextPage = false,
+  hasPreviousPage = false,
+  onNextPage,
+  onPreviousPage,
+  isLoading = false,
 }: DeveloperCommitsTableProps) {
-  const sortedCommits = useMemo(
-    () =>
-      [...commits].sort(
-        (a, b) =>
-          new Date(b.committedAt).getTime() - new Date(a.committedAt).getTime(),
-      ),
-    [commits],
-  )
-
   return (
     <Card
       className={cn(
@@ -57,51 +48,101 @@ function DeveloperCommitsTableComponent({
       )}
     >
       <CardHeader className="border-border/10 border-b pb-4">
-        <CardTitle className="text-base font-semibold text-foreground/90">
-          Последние коммиты пользователя
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-2 py-4 sm:px-4">
-        <Table className="min-w-full text-sm">
-          <TableHeader className="border-border/20 text-muted-foreground">
-            <TableRow className="border-border/20">
-              <TableHead className="pl-2 pr-4 font-semibold">SHA</TableHead>
-              <TableHead className="pr-4 font-semibold">Сообщение</TableHead>
-              <TableHead className="pr-4 font-semibold">Repo</TableHead>
-              <TableHead className="pr-4 font-semibold">Автор</TableHead>
-              <TableHead className="pr-4 text-right font-semibold">+ / -</TableHead>
-              <TableHead className="pr-2 text-right font-semibold">Дата</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedCommits.map((commit) => (
-              <TableRow
-                key={`${commit.sha}-${commit.committedAt}-${commit.repo}`}
-                className="border-border/10 hover:bg-background/40"
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-base font-semibold text-foreground/90">
+            Последние коммиты
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : null}
+            <span className="text-xs font-medium text-muted-foreground/70">
+              Страница {page}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="size-8 rounded-full border border-transparent text-muted-foreground hover:border-border/40 hover:text-foreground/85"
+                onClick={onPreviousPage}
+                disabled={!hasPreviousPage || isLoading}
               >
-                <TableCell className="pl-2 pr-4 font-mono text-xs uppercase text-muted-foreground">
-                  {commit.sha}
-                </TableCell>
-                <TableCell className="pr-4 text-foreground/90">
-                  {commit.message}
-                </TableCell>
-                <TableCell className="pr-4 text-muted-foreground/80">
-                  {commit.repo}
-                </TableCell>
-                <TableCell className="pr-4 text-foreground/90">
-                  {commit.author}
-                </TableCell>
-                <TableCell className="pr-4 text-right tabular-nums">
-                  <span className="font-medium text-emerald-400">+{commit.additions}</span>{" "}
-                  <span className="font-medium text-rose-400">-{commit.deletions}</span>
-                </TableCell>
-                <TableCell className="pr-2 text-right text-muted-foreground/80 tabular-nums">
-                  {formatDate(commit.committedAt)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="size-8 rounded-full border border-transparent text-muted-foreground hover:border-border/40 hover:text-foreground/85"
+                onClick={onNextPage}
+                disabled={!hasNextPage || isLoading}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="px-3 py-5 sm:px-5">
+        <ul className="flex flex-col gap-5">
+          {commits.map((commit) => (
+            <li
+              key={`${commit.sha}-${commit.committedAt}-${commit.repoId}`}
+              className="border-border/10 border-b pb-5 last:border-none last:pb-0"
+            >
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full border border-border/30 bg-background/60 p-2">
+                    <GitCommit className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground">
+                        {commit.message || "Без сообщения"}
+                      </span>
+                      {commit.isMerge ? (
+                        <Badge
+                          variant="secondary"
+                          className="rounded-full border border-border/40 bg-background/60 px-2 py-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+                        >
+                          Merge
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground/80">
+                      {commit.repoName ? (
+                        <span className="font-medium text-foreground/80">
+                          {commit.repoName}
+                        </span>
+                      ) : null}
+                      {commit.repoName ? <span>•</span> : null}
+                      <span>{formatRelativeTimeFromNow(commit.committedAt)}</span>
+                      <span>({formatDateTime(commit.committedAt)})</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground/70">
+                      <span>{commit.authorName || "Неизвестный автор"}</span>
+                      {commit.filesChanged ? (
+                        <>
+                          <span>•</span>
+                          <span>{commit.filesChanged} файлов</span>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-medium tabular-nums">
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-400">
+                      +{commit.addedLines}
+                    </span>
+                    <span className="rounded-full bg-rose-500/10 px-2 py-1 text-rose-400">
+                      -{commit.deletedLines}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       </CardContent>
     </Card>
   )

@@ -1,9 +1,4 @@
-export type DeveloperProfileMetric = {
-  id: string
-  label: string
-  value: string
-  secondary?: string
-}
+import type { DevKpi } from "@/entities/developer"
 
 export type DeveloperDailyActivityDatum = {
   date: string
@@ -12,32 +7,59 @@ export type DeveloperDailyActivityDatum = {
 
 export type DeveloperHourlyPatternDatum = {
   hour: number
-  count: number
+  commits: number
+  linesAdded: number
+  linesDeleted: number
 }
 
 export type DeveloperWeekdayPatternDatum = {
-  day: string
+  weekday: number
   label: string
+  commits: number
+}
+
+export type DeveloperSizeHistogramBucket = {
+  bucket: string
   count: number
+}
+
+export type DeveloperRecommendation = {
+  id: string
+  title: string
+  description: string
+  severity: "info" | "warning" | "success" | "critical" | string
 }
 
 export type DeveloperCommitItem = {
   sha: string
-  message: string
-  repo: string
-  author: string
-  additions: number
-  deletions: number
+  repoId: string
+  repoName: string
+  projectId: number | null
+  authorId: string
+  authorName: string
+  authorEmail: string
+  committerId: string
+  committerName: string
+  committerEmail: string
   committedAt: string
+  message: string
+  isMerge: boolean
+  addedLines: number
+  deletedLines: number
+  filesChanged: number
 }
 
-export type DeveloperProfile = {
-  id: string
-  name: string
-  email: string
-  summary: DeveloperProfileMetric[]
-  dailyActivity: DeveloperDailyActivityDatum[]
-  hourlyPattern: DeveloperHourlyPatternDatum[]
-  weekdayPattern: DeveloperWeekdayPatternDatum[]
-  commits: DeveloperCommitItem[]
+export type DeveloperCommitFeed = {
+  items: DeveloperCommitItem[]
+  nextCursor: string | null
+}
+
+export type DeveloperProfileSummary = {
+  kpi: DevKpi
+  daily: DeveloperDailyActivityDatum[]
+  hourly: DeveloperHourlyPatternDatum[]
+  weekday: DeveloperWeekdayPatternDatum[]
+  sizeHistogram: DeveloperSizeHistogramBucket[]
+  latestCommits: DeveloperCommitFeed
+  recommendations: DeveloperRecommendation[]
 }

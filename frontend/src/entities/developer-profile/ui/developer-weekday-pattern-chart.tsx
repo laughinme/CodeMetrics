@@ -24,7 +24,7 @@ type DeveloperWeekdayPatternChartProps = {
 }
 
 const weekdayChartConfig = {
-  count: {
+  commits: {
     label: "Коммиты",
     color: "#22c55e",
   },
@@ -72,6 +72,7 @@ export function DeveloperWeekdayPatternChart({
               tickLine={false}
               tickMargin={8}
               allowDecimals={false}
+              dataKey="commits"
               tick={{ fill: "rgba(226,232,240,0.65)", fontSize: 11 }}
             />
             <ChartTooltip
@@ -89,7 +90,7 @@ export function DeveloperWeekdayPatternChart({
               }
             />
             <Bar
-              dataKey="count"
+              dataKey="commits"
               fill="url(#developer-weekday-gradient)"
               radius={[6, 6, 0, 0]}
               barSize={28}

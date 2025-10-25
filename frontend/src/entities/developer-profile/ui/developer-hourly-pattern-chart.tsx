@@ -24,7 +24,7 @@ type DeveloperHourlyPatternChartProps = {
 }
 
 const hourlyChartConfig = {
-  count: {
+  commits: {
     label: "Коммиты",
     color: "#22c55e",
   },
@@ -73,6 +73,7 @@ export function DeveloperHourlyPatternChart({
               tickLine={false}
               tickMargin={8}
               allowDecimals={false}
+              dataKey="commits"
               tick={{ fill: "rgba(226,232,240,0.65)", fontSize: 11 }}
             />
             <ChartTooltip
@@ -81,16 +82,28 @@ export function DeveloperHourlyPatternChart({
                 <ChartTooltipContent
                   indicator="dot"
                   labelFormatter={(value) => `${value}:00`}
-                  formatter={(value) => (
-                    <span className="font-semibold text-foreground">
-                      {value} коммитов
-                    </span>
-                  )}
+                  formatter={(value, _name, entry) => {
+                    const payload = entry?.payload as
+                      | (DeveloperHourlyPatternDatum & { [key: string]: unknown })
+                      | undefined
+                    const linesAdded = payload?.linesAdded ?? 0
+                    const linesDeleted = payload?.linesDeleted ?? 0
+                    return (
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold text-foreground">
+                          {value} коммитов
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          +{linesAdded} / -{linesDeleted} строк
+                        </span>
+                      </div>
+                    )
+                  }}
                 />
               }
             />
             <Bar
-              dataKey="count"
+              dataKey="commits"
               fill="url(#developer-hour-gradient)"
               radius={[6, 6, 0, 0]}
               barSize={20}

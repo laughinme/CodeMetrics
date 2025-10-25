@@ -3,28 +3,26 @@
 import { memo, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 
-import {
-  developerMetrics,
-  DeveloperTable,
-  type DeveloperMetricRow,
-} from "@/entities/developer"
+import { DeveloperTable, type DeveloperRow } from "@/entities/developer"
 
 type DeveloperListWidgetProps = {
-  data?: DeveloperMetricRow[]
+  data?: DeveloperRow[]
   title?: string
   className?: string
 }
 
 function DeveloperListWidgetComponent({
-  data = developerMetrics,
+  data = [],
   title,
   className,
 }: DeveloperListWidgetProps) {
   const navigate = useNavigate()
 
   const handleSelect = useCallback(
-    (developer: DeveloperMetricRow) => {
-      navigate(`/developers/${developer.id}`)
+    (developer: DeveloperRow) => {
+      navigate(`/developers/${developer.id}`, {
+        state: { name: developer.name, email: developer.email },
+      })
     },
     [navigate],
   )
