@@ -43,7 +43,7 @@ class EntityService:
     async def get_project_repos(self, project_id: int) -> list[Repository]:
         return await self.project_repo.get_repos(project_id)
 
-    async def list_repo_branches(self, repo_id: UUID) -> Optional[list[Branch]]:
+    async def list_repo_branches(self, repo_id: UUID) -> list[Branch] | None:
         repository = await self.repository_repo.get_by_id(repo_id)
         if repository is None:
             return None
