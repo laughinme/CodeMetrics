@@ -9,6 +9,9 @@ from database.relational_db import (
     get_uow,
 )
 from core.config import config
+from fastapi import Depends
+
+from ..api_service.external_api import ExternalAPIClient
 from .service import MetricsService
 from ..api_service.external_api import ExternalAPIClient
 
