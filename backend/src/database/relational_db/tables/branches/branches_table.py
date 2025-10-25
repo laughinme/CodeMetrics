@@ -6,12 +6,13 @@ from sqlalchemy import Boolean, ForeignKey, String, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..table_base import Base
+from ..mixins import TimestampMixin
 
 if TYPE_CHECKING:
     from ..repositories.repositories_table import Repository
 
 
-class Branch(Base):
+class Branch(Base, TimestampMixin):
     __tablename__ = "branches"
     __table_args__ = (
         UniqueConstraint("repo_id", "name", name="uq_branch_repo_name"),

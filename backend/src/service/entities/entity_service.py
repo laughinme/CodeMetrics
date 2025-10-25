@@ -16,7 +16,7 @@ from database.relational_db import (
     Branch,
     Commit
 )
-from domain.entities import CommitOut
+from domain.entities import CommitOut, BranchOut
 from domain.entities.commons import AuthorRef, Page, RepoRef
 
 class EntityService:
@@ -43,11 +43,35 @@ class EntityService:
     async def get_project_repos(self, project_id: int) -> list[Repository]:
         return await self.project_repo.get_repos(project_id)
 
-    async def list_repo_branches(self, repo_id: UUID) -> list[Branch] | None:
+    async def list_repo_branches(
+        self, repo_id: UUID,
+        *,
+        limit: int,
+        cursor: str | None = None,
+    ) -> Page[BranchOut] | None:
         repository = await self.repository_repo.get_by_id(repo_id)
         if repository is None:
             return None
-        return await self.branch_repo.list_for_repository(repository.id)
+        
+        cursor_tuple = self._decode_cursor(cursor) if cursor else None
+        
+        branches, next_cursor_tuple = await self.branch_repo.list_for_repository(
+            repository.id,
+            limit=limit,
+            cursor=cursor_tuple,
+        )
+        
+        next_cursor = self._encode_cursor(next_cursor_tuple) if next_cursor_tuple else None
+        items = [self._map_branch(branch) for branch in branches]
+        return Page[BranchOut](items=items, next_cursor=next_cursor)
+    
+    def _map_branch(self, branch: Branch) -> BranchOut:
+        return BranchOut(
+            id=branch.id,
+            name=branch.name,
+            is_default=branch.is_default,
+            is_protected=branch.is_protected,
+        )
 
     async def list_repo_commits(
         self,
@@ -85,16 +109,16 @@ class EntityService:
 
     @staticmethod
     def _decode_cursor(cursor: str) -> tuple[datetime, str]:
-        created_str, sha = cursor.split("|", 1)
+        created_str, string = cursor.split("|", 1)
         created_at = datetime.fromisoformat(created_str)
         if created_at.tzinfo is None:
             created_at = created_at.replace(tzinfo=timezone.utc)
-        return created_at, sha
+        return created_at, string
 
     @staticmethod
     def _encode_cursor(cursor: tuple[datetime, str]) -> str:
-        created_at, sha = cursor
-        return f"{created_at.isoformat()}|{sha}"
+        created_at, string = cursor
+        return f"{created_at.isoformat()}|{string}"
 
     def _map_commit(self, commit: Commit) -> CommitOut:
         repository = commit.repository

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from uuid import UUID
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,10 +45,27 @@ class BranchInterface:
 
         return synced
 
-    async def list_for_repository(self, repository_id: UUID) -> list[Branch]:
-        rows = await self.session.scalars(
-            select(Branch)
-            .where(Branch.repo_id == repository_id)
-            .order_by(Branch.name)
-        )
-        return list(rows.all())
+    async def list_for_repository(
+        self, repository_id: UUID,
+        *,
+        limit: int,
+        cursor: tuple[datetime, str] | None = None,
+    ) -> tuple[list[Branch], tuple[datetime, str] | None]:
+        stmt = select(Branch).where(Branch.repo_id == repository_id)
+        if cursor is not None:
+            cursor_dt, cursor_name = cursor
+            stmt = stmt.where(
+                (Branch.created_at < cursor_dt)
+                | ((Branch.created_at == cursor_dt) & (Branch.name < cursor_name))
+            )
+
+        stmt = stmt.order_by(Branch.created_at.desc(), Branch.name.desc()).limit(limit + 1)
+        result = await self.session.execute(stmt)
+        branches = list(result.scalars().all())
+        
+        next_cursor = None
+        if len(branches) > limit:
+            overflow = branches.pop(limit)
+            next_cursor = (overflow.created_at, overflow.name)
+        
+        return branches, next_cursor
