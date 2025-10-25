@@ -14,15 +14,6 @@ export async function getProjects() {
     return res.data;
 }
 
-export type ProjectDetailsDto = {
-  id: number;
-  name: string;
-  full_name: string;
-  description?: string | null;
-  is_public: boolean;
-  repo_count: number;
-  last_activity_at: string;
-};
 
 export type ProjectDetailDto = {
   id: number;
