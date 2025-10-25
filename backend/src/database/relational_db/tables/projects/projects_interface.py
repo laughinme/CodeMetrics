@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.parsing.schemas.projects import ProjectModel
+from domain.parsing import ProjectModel
 
 from .projects_table import Project
 from ..repositories import Repository

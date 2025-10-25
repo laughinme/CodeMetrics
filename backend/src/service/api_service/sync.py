@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime, timedelta
 
-from database.relational_db import UoW
-from database.relational_db.tables import (
+from database.relational_db import (
+    UoW,
     AuthorInterface, 
     BranchInterface, 
     CommitFileInterface, 
@@ -20,8 +20,9 @@ from domain.parsing.schemas import (
     DiffModel,
     ProjectModel,
     RepositoryModel,
+    APIListResponse,
+    APIResponse
 )
-from domain.parsing.schemas.common import APIListResponse, APIResponse
 
 from .diff_parser import decode_diff_content, parse_diff
 from .external_api import ExternalAPIClient
@@ -99,6 +100,7 @@ class SourceCodeSyncService:
         repository: Repository,
     ) -> None:
         after_iso: str | None = None
+        
         latest_created = await self._commits.get_latest_created_at(repository.id)
         if latest_created is not None:
             anchor = latest_created - self._resync_overlap
@@ -112,25 +114,14 @@ class SourceCodeSyncService:
         while True:
             logger.debug(
                 "Fetching commits for %s/%s page=%d cursor=%s after=%s",
-                project_key,
-                repository_name,
-                page,
-                cursor,
-                after_iso,
+                project_key, repository_name, page, cursor, after_iso,
             )
             commits, cursor = await self._fetch_commits(
-                project_key,
-                repository_name,
-                cursor=cursor,
-                after=after_iso,
+                project_key, repository_name, cursor=cursor, after=after_iso,
             )
             logger.debug(
                 "Fetched %d commits for %s/%s page=%d next_cursor=%s",
-                len(commits),
-                project_key,
-                repository_name,
-                page,
-                cursor,
+                len(commits), project_key, repository_name, page, cursor,
             )
 
             if not commits:
@@ -145,9 +136,7 @@ class SourceCodeSyncService:
             if self._max_commit_pages and page >= self._max_commit_pages:
                 logger.info(
                     "Stopping commit fetch for %s/%s after %d pages (cap reached)",
-                    project_key,
-                    repository_name,
-                    self._max_commit_pages,
+                    project_key, repository_name, self._max_commit_pages,
                 )
                 break
 
@@ -165,10 +154,7 @@ class SourceCodeSyncService:
         await self._authors.touch_commit_window(committer, commit_model.created_at)
 
         commit = await self._commits.upsert_from_model(
-            repository,
-            commit_model,
-            author,
-            committer,
+            repository, commit_model, author, committer,
         )
 
         try:
@@ -176,10 +162,7 @@ class SourceCodeSyncService:
         except ExternalAPIError as exc:
             logger.warning(
                 "Failed to fetch diff for %s/%s@%s: %s",
-                project_key,
-                repository_name,
-                commit_model.sha,
-                exc,
+                project_key, repository_name, commit_model.sha, exc,
             )
             diff = None
 

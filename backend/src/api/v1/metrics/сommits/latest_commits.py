@@ -20,12 +20,13 @@ async def get_latest_commits(
     author: Optional[UUID] = Query(None, description="Filter by author UUID"),
     limit: int = Query(20, ge=1, le=100, description="Number of items per page"),
     cursor: Optional[str] = Query(None, description="Pagination cursor"),
-    commits_service: MetricsService = ...,
+    # commits_service: MetricsService = ...,
 ) -> PaginatedCommits:
-    return await commits_service.get_latest_commits(
-        project_key=project_key,
-        repo=repo,
-        author=author,
-        limit=limit,
-        cursor=cursor
-    )
+    # return await commits_service.get_latest_commits(
+    #     project_key=project_key,
+    #     repo=repo,
+    #     author=author,
+    #     limit=limit,
+    #     cursor=cursor
+    # )
+    ...

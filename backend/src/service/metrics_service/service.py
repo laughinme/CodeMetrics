@@ -27,9 +27,9 @@ class MetricsService:
         self,
         since: datetime,
         until: datetime,
-        project_key: Optional[str] = None,
-        repo: Optional[UUID] = None,
-        author: Optional[UUID] = None
+        project_id: int | None = None,
+        repo_id: UUID | None = None,
+        author_id: UUID | None = None
     ) -> Dict[str, Any]:
         """
         Get key performance indicators including commits count, active developers, 
@@ -45,12 +45,12 @@ class MetricsService:
                 "until": until.isoformat()
             }
             
-            if project_key:
-                params["projectKey"] = project_key
-            if repo:
-                params["repoId"] = str(repo)
-            if author:
-                params["authorId"] = str(author)
+            if project_id:
+                params["projectId"] = str(project_id)
+            if repo_id:
+                params["repoId"] = str(repo_id)
+            if author_id:
+                params["authorId"] = str(author_id)
             
             # TODO: Implement actual API calls to fetch and calculate KPIs
             # This is a placeholder implementation with realistic data structure
@@ -71,9 +71,9 @@ class MetricsService:
                     "until": until.isoformat()
                 },
                 "filters": {
-                    "project_key": project_key,
-                    "repository": str(repo) if repo else None,
-                    "author": str(author) if author else None
+                    "project_id": project_id,
+                    "repository_id": repo_id if repo_id else None,
+                    "author_id": author_id if author_id else None
                 }
             }
             
