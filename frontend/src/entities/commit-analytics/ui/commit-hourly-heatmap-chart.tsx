@@ -36,6 +36,7 @@ import type {
 
 const legendLevels = [0, 1, 2, 3, 4] as const
 const CELL_SIZE = 14
+const COLUMN_GAP = 3
 
 const heatmapPaletteStyles = {
   "--heatmap-color-0": "#ffffff",
@@ -93,9 +94,16 @@ export function CommitHourlyHeatmapChart({
   onRangeChange,
   rangeOptions,
 }: CommitHourlyHeatmapChartProps) {
-  const { weeks, maxCommits, monthLabels } = React.useMemo(() => {
+  const scrollContainerRef = React.useRef<HTMLDivElement | null>(null)
+
+  const { weeks, maxCommits, monthLabels, maxWeekIndex } = React.useMemo(() => {
     if (data.length === 0) {
-      return { weeks: [] as CalendarCell[][], maxCommits: 0, monthLabels: [] as string[] }
+      return {
+        weeks: [] as CalendarCell[][],
+        maxCommits: 0,
+        monthLabels: [] as string[],
+        maxWeekIndex: 0,
+      }
     }
 
     const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date))
@@ -107,6 +115,9 @@ export function CommitHourlyHeatmapChart({
 
     const weeks: CalendarCell[][] = []
     let cursor = new Date(start)
+    let maxCommitsValue = 0
+    let maxWeekIndex = 0
+    let weekIndex = 0
 
     while (cursor <= end) {
       const week: CalendarCell[] = []
@@ -115,15 +126,17 @@ export function CommitHourlyHeatmapChart({
         const commits = map.get(iso) ?? 0
         const isPlaceholder = cursor < firstDate || cursor > lastDate
         week.push({ date: iso, commits, isPlaceholder })
+        if (!isPlaceholder && commits > maxCommitsValue) {
+          maxCommitsValue = commits
+          maxWeekIndex = weekIndex
+        }
         cursor.setDate(cursor.getDate() + 1)
       }
       weeks.push(week)
+      weekIndex += 1
     }
 
-    const maxCommits = sorted.reduce(
-      (max, item) => Math.max(max, item.commits),
-      0
-    )
+    const maxCommits = maxCommitsValue
 
     let previousMonth = -1
     const monthLabels = weeks.map((week) => {
@@ -136,8 +149,16 @@ export function CommitHourlyHeatmapChart({
       return ""
     })
 
-    return { weeks, maxCommits, monthLabels }
+    return { weeks, maxCommits, monthLabels, maxWeekIndex }
   }, [data])
+
+  React.useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container || weeks.length === 0) return
+    const columnWidth = CELL_SIZE + COLUMN_GAP
+    const targetOffset = Math.max(0, maxWeekIndex * columnWidth)
+    container.scrollLeft = targetOffset
+  }, [maxWeekIndex, weeks.length])
 
   const getLevel = React.useCallback(
     (commits: number) => {
@@ -243,7 +264,7 @@ export function CommitHourlyHeatmapChart({
                   </span>
                 ))}
               </div>
-              <div className="flex-1 overflow-x-auto">
+              <div className="flex-1 overflow-x-auto" ref={scrollContainerRef}>
                 <div className="flex flex-col gap-[6px]">
                   <div className="flex gap-[3px]">
                     {weeks.map((_, index) => (

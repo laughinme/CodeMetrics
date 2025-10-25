@@ -1,9 +1,8 @@
-export type CommitTimeRange = "1y" | "1m" | "7d"
+import type { MetricsRangeOption, MetricsRangeValue } from "@/shared/lib/metrics-range"
 
-export type TimeRangeOption = {
-  value: CommitTimeRange
-  label: string
-}
+export type CommitTimeRange = MetricsRangeValue
+
+export type TimeRangeOption = MetricsRangeOption
 
 export type AuthorDatum = {
   author: string

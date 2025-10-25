@@ -8,6 +8,7 @@ export type DeveloperDailyActivityDatum = {
 export type DeveloperHourlyPatternDatum = {
   hour: number
   commits: number
+  sharePct: number
   linesAdded: number
   linesDeleted: number
 }
@@ -16,6 +17,7 @@ export type DeveloperWeekdayPatternDatum = {
   weekday: number
   label: string
   commits: number
+  sharePct: number
 }
 
 export type DeveloperSizeHistogramBucket = {

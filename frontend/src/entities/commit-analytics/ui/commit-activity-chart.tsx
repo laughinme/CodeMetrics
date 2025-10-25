@@ -9,6 +9,11 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/shared/components/ui/chart"
+import {
+  metricsRangeOptions,
+  type MetricsRangeOption,
+  type MetricsRangeValue,
+} from "@/shared/lib/metrics-range"
 import { cn } from "@/shared/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import {
@@ -31,18 +36,11 @@ const dailyCommitsChartConfig = {
   },
 } satisfies ChartConfig
 
-export type ActivityRange = "1y" | "1m" | "7d"
+export type ActivityRange = MetricsRangeValue
 
-export type ActivityRangeOption = {
-  value: ActivityRange
-  label: string
-}
+export type ActivityRangeOption = MetricsRangeOption
 
-export const activityRangeOptions: ActivityRangeOption[] = [
-  { value: "1y", label: "1 year" },
-  { value: "1m", label: "1 month" },
-  { value: "7d", label: "7 days" },
-]
+export const activityRangeOptions: ActivityRangeOption[] = metricsRangeOptions
 
 type CommitActivityChartProps = {
   data: DailyCommitsDatum[]

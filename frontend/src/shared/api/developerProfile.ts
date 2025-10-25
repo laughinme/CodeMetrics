@@ -40,10 +40,11 @@ export type DeveloperProfileSummaryDto = {
     by_hour: Array<{
       hour: number
       commits: number
+      share_pct: number
       lines_added: number
       lines_deleted: number
     }>
-    by_weekday: Array<{ weekday: number; commits: number }>
+    by_weekday: Array<{ weekday: number; commits: number; share_pct: number }>
     size_hist: Array<{ bucket: string; count: number }>
   }
   size_hist?: Array<{ bucket: string; count: number }>

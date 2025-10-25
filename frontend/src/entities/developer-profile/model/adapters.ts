@@ -29,6 +29,7 @@ const toHourlyPattern = (
 ): DeveloperHourlyPatternDatum => ({
   hour: point.hour,
   commits: point.commits,
+  sharePct: point.share_pct,
   linesAdded: point.lines_added,
   linesDeleted: point.lines_deleted,
 })
@@ -39,6 +40,7 @@ const toWeekdayPattern = (
   weekday: point.weekday,
   label: WEEKDAY_LABELS[point.weekday] ?? String(point.weekday),
   commits: point.commits,
+  sharePct: point.share_pct,
 })
 
 const toSizeBucket = (

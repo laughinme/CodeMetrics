@@ -1,5 +1,5 @@
-export * from "./model/mock-data"
 export * from "./model/types"
+export * from "./model/constants"
 export * from "./ui/timeline-trend-chart"
 export * from "./ui/timeline-hourly-pattern-chart"
 export * from "./ui/timeline-weekday-pattern-chart"

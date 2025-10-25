@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { cn } from "@/shared/lib/utils"
@@ -23,9 +24,14 @@ type DeveloperHourlyPatternChartProps = {
   className?: string
 }
 
+const percentFormatter = new Intl.NumberFormat("ru-RU", {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+})
+
 const hourlyChartConfig = {
-  commits: {
-    label: "Коммиты",
+  sharePct: {
+    label: "Доля коммитов, %",
     color: "#22c55e",
   },
 } satisfies ChartConfig
@@ -34,6 +40,18 @@ export function DeveloperHourlyPatternChart({
   data,
   className,
 }: DeveloperHourlyPatternChartProps) {
+  const yAxisMax = useMemo(() => {
+    const maxShare = data.reduce(
+      (max, item) => Math.max(max, item.sharePct ?? 0),
+      0,
+    )
+    if (maxShare <= 0) {
+      return 10
+    }
+    const withMargin = Math.ceil(maxShare * 1.1)
+    return Math.min(100, withMargin)
+  }, [data])
+
   return (
     <Card
       className={cn(
@@ -72,8 +90,11 @@ export function DeveloperHourlyPatternChart({
               axisLine={false}
               tickLine={false}
               tickMargin={8}
-              allowDecimals={false}
-              dataKey="commits"
+              tickFormatter={(value: number) =>
+                `${percentFormatter.format(value)}%`
+              }
+              allowDecimals
+              domain={[0, yAxisMax]}
               tick={{ fill: "rgba(226,232,240,0.65)", fontSize: 11 }}
             />
             <ChartTooltip
@@ -84,14 +105,22 @@ export function DeveloperHourlyPatternChart({
                   labelFormatter={(value) => `${value}:00`}
                   formatter={(value, _name, entry) => {
                     const payload = entry?.payload as
-                      | (DeveloperHourlyPatternDatum & { [key: string]: unknown })
+                      | (DeveloperHourlyPatternDatum & {
+                          [key: string]: unknown
+                        })
                       | undefined
                     const linesAdded = payload?.linesAdded ?? 0
                     const linesDeleted = payload?.linesDeleted ?? 0
+                    const commits = payload?.commits ?? 0
+                    const share = typeof value === "number" ? value : Number(value)
+                    const shareText = `${percentFormatter.format(share)}%`
                     return (
                       <div className="flex flex-col gap-1">
                         <span className="font-semibold text-foreground">
-                          {value} коммитов
+                          Доля: {shareText}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {commits} коммитов
                         </span>
                         <span className="text-xs text-muted-foreground">
                           +{linesAdded} / -{linesDeleted} строк
@@ -103,7 +132,7 @@ export function DeveloperHourlyPatternChart({
               }
             />
             <Bar
-              dataKey="commits"
+              dataKey="sharePct"
               fill="url(#developer-hour-gradient)"
               radius={[6, 6, 0, 0]}
               barSize={20}

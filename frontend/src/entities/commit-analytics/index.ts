@@ -1,4 +1,3 @@
-export * from "./model/mock-data"
 export * from "./model/types"
 export * from "./ui/commit-activity-chart"
 export * from "./ui/commit-top-authors-chart"

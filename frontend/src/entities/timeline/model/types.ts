@@ -1,9 +1,8 @@
-export type TimelineRange = "1y" | "1m" | "7d"
+import type { MetricsRangeOption, MetricsRangeValue } from "@/shared/lib/metrics-range"
 
-export type TimelineRangeOption = {
-  value: TimelineRange
-  label: string
-}
+export type TimelineRange = MetricsRangeValue
+
+export type TimelineRangeOption = MetricsRangeOption
 
 export type TimelineDailyDatum = {
   date: string
