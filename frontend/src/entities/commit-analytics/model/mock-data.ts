@@ -7,20 +7,12 @@ import {
 } from "./types"
 
 export const commitTimeRangeOptions: TimeRangeOption[] = [
-  { value: "all", label: "All time" },
-  { value: "30d", label: "30 days" },
+  { value: "1y", label: "1 year" },
+  { value: "1m", label: "1 month" },
   { value: "7d", label: "7 days" },
-  { value: "1d", label: "1 day" },
 ]
 
 const authorDataset: Record<CommitTimeRange, AuthorDatum[]> = {
-  "1d": [
-    { author: "Anastasia P.", commits: 9 },
-    { author: "Ivan S.", commits: 8 },
-    { author: "Dmitry T.", commits: 7 },
-    { author: "Elena G.", commits: 6 },
-    { author: "Maria K.", commits: 5 },
-  ],
   "7d": [
     { author: "Anastasia P.", commits: 38 },
     { author: "Ivan S.", commits: 35 },
@@ -30,7 +22,7 @@ const authorDataset: Record<CommitTimeRange, AuthorDatum[]> = {
     { author: "Sergey L.", commits: 21 },
     { author: "Alexandr V.", commits: 19 },
   ],
-  "30d": [
+  "1m": [
     { author: "Anastasia P.", commits: 112 },
     { author: "Ivan S.", commits: 105 },
     { author: "Dmitry T.", commits: 97 },
@@ -42,7 +34,7 @@ const authorDataset: Record<CommitTimeRange, AuthorDatum[]> = {
     { author: "Pavel R.", commits: 53 },
     { author: "Olga Z.", commits: 49 },
   ],
-  all: [
+  "1y": [
     { author: "Anastasia P.", commits: 420 },
     { author: "Ivan S.", commits: 398 },
     { author: "Dmitry T.", commits: 372 },
@@ -57,7 +49,7 @@ const authorDataset: Record<CommitTimeRange, AuthorDatum[]> = {
 }
 
 const dailyCommitsDataset: DailyCommitsDatum[] = (() => {
-  const points = 90
+  const points = 365
   const endDate = new Date("2024-06-30T00:00:00")
 
   return Array.from({ length: points }, (_, index) => {
@@ -120,10 +112,9 @@ const contributionCalendarDataset: ContributionActivityDatum[] = (() => {
 })()
 
 const rangeDaysMap: Record<CommitTimeRange, number> = {
-  "1d": 7,
-  "7d": 28,
-  "30d": 26 * 7,
-  all: contributionCalendarDataset.length,
+  "7d": 7,
+  "1m": 31,
+  "1y": contributionCalendarDataset.length,
 }
 
 export function getMockContributionActivity(

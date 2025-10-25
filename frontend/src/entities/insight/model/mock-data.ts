@@ -15,7 +15,7 @@ export const insightFilters = {
     label: "Public Project",
   },
   period: {
-    label: "30 days",
+    label: "1 month",
   },
 } satisfies Record<
   "project" | "period",

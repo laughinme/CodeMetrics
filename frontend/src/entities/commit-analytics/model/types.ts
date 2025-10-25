@@ -1,4 +1,4 @@
-export type CommitTimeRange = "1d" | "7d" | "30d" | "all"
+export type CommitTimeRange = "1y" | "1m" | "7d"
 
 export type TimeRangeOption = {
   value: CommitTimeRange

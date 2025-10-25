@@ -11,7 +11,7 @@ import {
   type DailyCommitsDatum,
 } from "@/entities/commit-analytics"
 
-const DEFAULT_RANGE: ActivityRange = activityRangeOptions[0]?.value ?? "90d"
+const DEFAULT_RANGE: ActivityRange = activityRangeOptions[0]?.value ?? "1y"
 
 export function CommitActivityWidget() {
   const isMobile = useIsMobile()
@@ -26,7 +26,7 @@ export function CommitActivityWidget() {
   const allCommits = React.useMemo(() => getMockDailyCommits(), [])
 
   const activityData = React.useMemo<DailyCommitsDatum[]>(() => {
-    const days = range === "90d" ? 90 : range === "30d" ? 30 : 7
+    const days = range === "1y" ? 365 : range === "1m" ? 31 : 7
     return allCommits.slice(Math.max(allCommits.length - days, 0))
   }, [allCommits, range])
 

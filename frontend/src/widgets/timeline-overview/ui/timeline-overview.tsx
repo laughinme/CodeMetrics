@@ -20,7 +20,7 @@ type TimelineOverviewWidgetProps = {
   className?: string
 }
 
-const DEFAULT_RANGE: TimelineRange = timelineRangeOptions[0]?.value ?? "90d"
+const DEFAULT_RANGE: TimelineRange = timelineRangeOptions[0]?.value ?? "1y"
 
 export function TimelineOverviewWidget({ className }: TimelineOverviewWidgetProps) {
   const [range, setRange] = useState<TimelineRange>(DEFAULT_RANGE)

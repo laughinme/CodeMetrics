@@ -9,12 +9,12 @@ import type {
 } from "./types"
 
 const BASE_RANGE_OPTIONS: TimelineRangeOption[] = [
-  { value: "90d", label: "3 months" },
-  { value: "30d", label: "30 days" },
+  { value: "1y", label: "1 year" },
+  { value: "1m", label: "1 month" },
   { value: "7d", label: "7 days" },
 ]
 
-const TOTAL_DAYS = 120
+const TOTAL_DAYS = 400
 
 const referenceEndDate = new Date("2024-10-24T00:00:00Z")
 
@@ -64,8 +64,8 @@ const weekdayPatternBase: TimelineWeekdayDatum[] = weekdayLabels.map(
 )
 
 const rangeDays: Record<TimelineRange, number> = {
-  "90d": 90,
-  "30d": 30,
+  "1y": 365,
+  "1m": 31,
   "7d": 7,
 }
 
@@ -97,7 +97,7 @@ export const timelineFilters = {
     label: "All projects",
   },
   period: {
-    label: "30 days",
+    label: "1 month",
   },
 } satisfies Record<
   "scope" | "period",

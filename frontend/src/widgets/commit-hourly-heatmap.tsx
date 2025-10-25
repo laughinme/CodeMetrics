@@ -11,7 +11,8 @@ import {
   type ContributionActivityDatum,
 } from "@/entities/commit-analytics"
 
-const DEFAULT_RANGE: CommitTimeRange = "30d"
+const DEFAULT_RANGE: CommitTimeRange =
+  commitTimeRangeOptions[0]?.value ?? "1y"
 
 export function CommitHourlyHeatmapWidget() {
   const isMobile = useIsMobile()

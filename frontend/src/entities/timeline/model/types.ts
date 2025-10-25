@@ -1,4 +1,4 @@
-export type TimelineRange = "90d" | "30d" | "7d"
+export type TimelineRange = "1y" | "1m" | "7d"
 
 export type TimelineRangeOption = {
   value: TimelineRange

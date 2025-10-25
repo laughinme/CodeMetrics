@@ -28,7 +28,7 @@ export const developerFilters = {
     label: "All projects",
   },
   period: {
-    label: "30 days",
+    label: "1 month",
   },
 } satisfies Record<
   "project" | "period",

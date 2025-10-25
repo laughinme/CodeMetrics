@@ -31,7 +31,7 @@ const dailyCommitsChartConfig = {
   },
 } satisfies ChartConfig
 
-export type ActivityRange = "90d" | "30d" | "7d"
+export type ActivityRange = "1y" | "1m" | "7d"
 
 export type ActivityRangeOption = {
   value: ActivityRange
@@ -39,8 +39,8 @@ export type ActivityRangeOption = {
 }
 
 export const activityRangeOptions: ActivityRangeOption[] = [
-  { value: "90d", label: "3 months" },
-  { value: "30d", label: "30 days" },
+  { value: "1y", label: "1 year" },
+  { value: "1m", label: "1 month" },
   { value: "7d", label: "7 days" },
 ]
 

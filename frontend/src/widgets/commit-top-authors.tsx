@@ -10,11 +10,8 @@ import {
   type CommitTimeRange,
 } from "@/entities/commit-analytics"
 
-const TOP_AUTHOR_RANGE_OPTIONS = commitTimeRangeOptions.filter(
-  (option) => option.value !== "7d"
-)
 const DEFAULT_RANGE: CommitTimeRange =
-  TOP_AUTHOR_RANGE_OPTIONS[0]?.value ?? "30d"
+  commitTimeRangeOptions[0]?.value ?? "1y"
 
 export function CommitTopAuthorsWidget() {
   const isMobile = useIsMobile()
@@ -23,7 +20,7 @@ export function CommitTopAuthorsWidget() {
   React.useEffect(() => {
     if (isMobile) {
       const mobileRange =
-        TOP_AUTHOR_RANGE_OPTIONS[TOP_AUTHOR_RANGE_OPTIONS.length - 1]?.value ??
+        commitTimeRangeOptions[commitTimeRangeOptions.length - 1]?.value ??
         DEFAULT_RANGE
       setRange(mobileRange)
     }
@@ -34,7 +31,7 @@ export function CommitTopAuthorsWidget() {
   }, [range])
 
   const rangeLabel =
-    TOP_AUTHOR_RANGE_OPTIONS.find((option) => option.value === range)?.label ?? ""
+    commitTimeRangeOptions.find((option) => option.value === range)?.label ?? ""
 
   return (
     <CommitTopAuthorsChart
@@ -42,7 +39,7 @@ export function CommitTopAuthorsWidget() {
       range={range}
       rangeLabel={rangeLabel}
       onRangeChange={setRange}
-      rangeOptions={TOP_AUTHOR_RANGE_OPTIONS}
+      rangeOptions={commitTimeRangeOptions}
     />
   )
 }
