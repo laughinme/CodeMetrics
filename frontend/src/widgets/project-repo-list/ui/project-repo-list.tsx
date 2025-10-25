@@ -1,6 +1,7 @@
-"use client"
+"use client";
 
 import { memo } from "react";
+import { Link } from "react-router-dom";
 
 import { RepoCard, useReposList } from "@/entities/repos";
 import { Card } from "@/shared/components/ui/card";
@@ -71,7 +72,13 @@ function ProjectRepoListWidgetComponent({
   return (
     <div className={cn("grid grid-cols-1 gap-4 lg:grid-cols-2", className)}>
       {repos.map((repo) => (
-        <RepoCard key={repo.id} repo={repo} />
+        <Link
+          key={repo.id}
+          to={`/projects/${projectId}/repos/${repo.id}`}
+          className="block"
+        >
+          <RepoCard repo={repo} className="h-full" />
+        </Link>
       ))}
     </div>
   );

@@ -10,13 +10,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/shared/components/ui/chart"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -66,53 +60,55 @@ export function TimelineTrendChart({
         className,
       )}
     >
-      <CardHeader className="flex flex-col gap-2 pb-0">
-        <CardTitle className="text-lg font-semibold text-foreground">
-          Временная линия активности (daily)
-        </CardTitle>
-        <CardAction className="mt-2">
-          <ToggleGroup
-            type="single"
-            value={range}
-            onValueChange={(value) => value && onRangeChange(value as TimelineRange)}
-            variant="outline"
-            className="hidden h-12 items-center gap-0 rounded-full border border-border/30 bg-background/60 p-1 text-sm shadow-inner @[767px]/card:flex"
-          >
-            {rangeOptions.map((option) => (
-              <ToggleGroupItem
-                key={option.value}
-                value={option.value}
-                className={cn(
-                  "px-5 py-2 font-medium transition",
-                  "rounded-full border border-transparent text-muted-foreground/80",
-                  "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:border-white/20",
-                  "data-[state=off]:hover:bg-background/20 data-[state=off]:hover:text-foreground/80",
-                  "focus-visible:ring-0 focus-visible:ring-offset-0",
-                )}
-              >
-                {option.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <Select value={range} onValueChange={(value) => onRangeChange(value as TimelineRange)}>
-            <SelectTrigger
-              className="flex h-11 w-48 items-center justify-between rounded-full border border-border/30 bg-background/60 px-4 text-sm font-medium text-foreground/80 shadow-inner @[767px]/card:hidden"
-              aria-label="Select range"
+      <CardHeader className="pb-0">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle className="text-lg font-semibold text-foreground">
+            Activity timeline (daily)
+          </CardTitle>
+          <div className="flex flex-wrap items-center gap-2">
+            <ToggleGroup
+              type="single"
+              value={range}
+              onValueChange={(value) => value && onRangeChange(value as TimelineRange)}
+              variant="outline"
+              className="hidden h-12 items-center gap-0 rounded-full border border-border/30 bg-background/60 p-1 text-sm shadow-inner md:flex"
             >
-              <SelectValue placeholder="Select range" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
               {rangeOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="rounded-lg">
+                <ToggleGroupItem
+                  key={option.value}
+                  value={option.value}
+                  className={cn(
+                    "px-5 py-2 font-medium transition",
+                    "rounded-full border border-transparent text-muted-foreground/80",
+                    "data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:border-white/20",
+                    "data-[state=off]:hover:bg-background/20 data-[state=off]:hover:text-foreground/80",
+                    "focus-visible:ring-0 focus-visible:ring-offset-0",
+                  )}
+                >
                   {option.label}
-                </SelectItem>
+                </ToggleGroupItem>
               ))}
-            </SelectContent>
-          </Select>
-        </CardAction>
+            </ToggleGroup>
+            <Select value={range} onValueChange={(value) => onRangeChange(value as TimelineRange)}>
+              <SelectTrigger
+                className="flex h-11 w-48 items-center justify-between rounded-full border border-border/30 bg-background/60 px-4 text-sm font-medium text-foreground/80 shadow-inner md:hidden"
+                aria-label="Select range"
+              >
+                <SelectValue placeholder="Select range" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
+                {rangeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value} className="rounded-lg">
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="px-2 pb-6 pt-6 sm:px-6">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[320px] w-full">
+      <CardContent className="px-2 pb-6 pt-4 sm:px-6">
+        <ChartContainer config={chartConfig} className="mt-4 aspect-auto h-[320px] w-full">
           <AreaChart data={data} margin={{ top: 12, right: 12, left: 4, bottom: 0 }}>
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

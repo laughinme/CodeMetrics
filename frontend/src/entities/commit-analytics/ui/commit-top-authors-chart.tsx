@@ -11,7 +11,6 @@ import {
 } from "@/shared/components/ui/chart"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -61,62 +60,64 @@ export function CommitTopAuthorsChart({
 
   return (
     <Card className="h-full rounded-3xl border-border/30 bg-card/80 shadow-[0_10px_50px_-26px_rgba(64,217,108,0.35)] backdrop-blur">
-      <CardHeader className="flex flex-col gap-2 pb-0">
-        <div className="flex flex-col gap-1">
-          <CardTitle className="text-lg font-semibold text-foreground">
-            ТОП авторов (по коммитам)
-          </CardTitle>
-          <CardDescription className="text-sm text-muted-foreground/80">
-            Период: {rangeLabel}
-          </CardDescription>
-        </div>
-        <CardAction className="mt-2">
-          <ToggleGroup
-            type="single"
-            value={range}
-            onValueChange={(value) => {
-              if (value) {
-                onRangeChange(value as CommitTimeRange)
-              }
-            }}
-            variant="outline"
-            className="hidden rounded-full border border-border/20 bg-muted/30 px-1 py-1 *:data-[slot=toggle-group-item]:!rounded-full *:data-[slot=toggle-group-item]:!px-3 @[767px]/card:flex"
-          >
-            {rangeOptions.map((option) => (
-              <ToggleGroupItem key={option.value} value={option.value}>
-                {option.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <Select
-            value={range}
-            onValueChange={(value) => onRangeChange(value as CommitTimeRange)}
-          >
-            <SelectTrigger
-              className="flex w-40 rounded-full border-border/20 bg-muted/40 px-3 **:data-[slot=select-value]:truncate @[767px]/card:hidden"
-              size="sm"
-              aria-label="Выберите период"
+      <CardHeader className="pb-0">
+        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <CardTitle className="text-lg font-semibold text-foreground">
+              Top contributors (by commits)
+            </CardTitle>
+            <CardDescription className="text-sm text-muted-foreground/80">
+              Period: {rangeLabel}
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <ToggleGroup
+              type="single"
+              value={range}
+              onValueChange={(value) => {
+                if (value) {
+                  onRangeChange(value as CommitTimeRange)
+                }
+              }}
+              variant="outline"
+              className="hidden rounded-full border border-border/20 bg-muted/30 px-1 py-1 *:data-[slot=toggle-group-item]:!rounded-full *:data-[slot=toggle-group-item]:!px-3 md:flex"
             >
-              <SelectValue placeholder="Выберите период" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
               {rangeOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className="rounded-lg"
-                >
+                <ToggleGroupItem key={option.value} value={option.value}>
                   {option.label}
-                </SelectItem>
+                </ToggleGroupItem>
               ))}
-            </SelectContent>
-          </Select>
-        </CardAction>
+            </ToggleGroup>
+            <Select
+              value={range}
+              onValueChange={(value) => onRangeChange(value as CommitTimeRange)}
+            >
+              <SelectTrigger
+                className="flex w-40 rounded-full border-border/20 bg-muted/40 px-3 **:data-[slot=select-value]:truncate md:hidden"
+                size="sm"
+                aria-label="Select period"
+              >
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl bg-popover/95 backdrop-blur">
+                {rangeOptions.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    className="rounded-lg"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="px-2 pb-6 pt-6 sm:px-6">
+      <CardContent className="px-2 pb-6 pt-4 sm:px-6">
         <ChartContainer
           config={topAuthorsChartConfig}
-          className="aspect-auto h-[320px] w-full"
+          className="mt-4 aspect-auto h-[320px] w-full"
         >
           <BarChart
             data={data}
