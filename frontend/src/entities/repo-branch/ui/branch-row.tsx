@@ -56,6 +56,11 @@ function BranchRowComponent({ branch, className }: BranchRowProps) {
               Default
             </Badge>
           )}
+          {branch.isProtected && (
+            <Badge className="rounded-full bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
+              Protected
+            </Badge>
+          )}
         </div>
         {commit && (
           <div className="flex flex-col items-end text-right">

@@ -96,7 +96,10 @@ export default function RepoDetailPage() {
                       </h2>
                     </div>
                     <Separator className="bg-border/40" />
-                    <RepoBranchListWidget repoId={repoIdParam ?? null} />
+                    <RepoBranchListWidget
+                      repoId={repoIdParam ?? null}
+                      params={{ limit: 20 }}
+                    />
                   </section>
                 </div>
               </div>

@@ -1,22 +1,48 @@
 import { useMemo } from "react";
 import {
-  useQuery,
-  type UseQueryOptions,
-  type UseQueryResult,
+  type InfiniteData,
+  useInfiniteQuery,
+  type UseInfiniteQueryOptions,
+  type UseInfiniteQueryResult,
 } from "@tanstack/react-query";
 
-import { getRepoBranches } from "@/shared/api/repoBranches";
-import { toRepoBranch } from "./adapters";
-import type { RepoBranch } from "./types";
+import {
+  getRepoBranches,
+  type RepoBranchesParams,
+} from "@/shared/api/repoBranches";
+import { toRepoBranchPage } from "./adapters";
+import type { RepoBranch, RepoBranchPage } from "./types";
 
-type UseRepoBranchesOptions = Omit<
-  UseQueryOptions<RepoBranch[], unknown, RepoBranch[], RepoBranchesQueryKey>,
-  "queryKey" | "queryFn"
+type UseRepoBranchesParams = Omit<RepoBranchesParams, "cursor">;
+
+type RepoBranchesPageParam = string | null | undefined;
+
+type RepoBranchesQueryKey = readonly [
+  "repo",
+  "branches",
+  string | null,
+  number | undefined
+];
+
+type RepoBranchesInfiniteData = InfiniteData<
+  RepoBranchPage,
+  RepoBranchesPageParam
 >;
 
-type RepoBranchesQueryKey = readonly ["repo", "branches", string | null];
+type UseRepoBranchesOptions = Omit<
+  UseInfiniteQueryOptions<
+    RepoBranchPage,
+    unknown,
+    RepoBranchesInfiniteData,
+    RepoBranchesQueryKey,
+    RepoBranchesPageParam
+  >,
+  "queryKey" | "queryFn" | "initialPageParam" | "getNextPageParam"
+>;
 
-export type UseRepoBranchesResult = UseQueryResult<RepoBranch[]>;
+type UseRepoBranchesResult = UseInfiniteQueryResult<RepoBranchesInfiniteData> & {
+  branches: RepoBranch[];
+};
 
 const normalizeRepoId = (repoId: string | null | undefined) => {
   if (typeof repoId !== "string") {
@@ -28,25 +54,51 @@ const normalizeRepoId = (repoId: string | null | undefined) => {
 
 export function useRepoBranches(
   repoId: string | null | undefined,
+  params: UseRepoBranchesParams = {},
   options: UseRepoBranchesOptions = {}
 ): UseRepoBranchesResult {
+  const { limit } = params;
   const normalizedRepoId = useMemo(() => normalizeRepoId(repoId), [repoId]);
+
+  const queryKey = useMemo<RepoBranchesQueryKey>(
+    () => ["repo", "branches", normalizedRepoId, limit],
+    [normalizedRepoId, limit]
+  );
 
   const { enabled: enabledOption, ...restOptions } = options;
   const enabled = (enabledOption ?? true) && normalizedRepoId !== null;
 
-  return useQuery<RepoBranch[], unknown, RepoBranch[], RepoBranchesQueryKey>({
-    queryKey: ["repo", "branches", normalizedRepoId],
+  const query = useInfiniteQuery<
+    RepoBranchPage,
+    unknown,
+    RepoBranchesInfiniteData,
+    RepoBranchesQueryKey,
+    RepoBranchesPageParam
+  >({
+    queryKey,
+    initialPageParam: undefined,
     enabled,
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       if (!normalizedRepoId) {
         throw new Error("Cannot fetch branches without a repository id.");
       }
 
-      const dto = await getRepoBranches(normalizedRepoId);
-      return dto.map(toRepoBranch);
+      const dto = await getRepoBranches(normalizedRepoId, {
+        limit,
+        cursor: pageParam ?? null,
+      });
+      return toRepoBranchPage(dto);
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 60_000,
     ...restOptions,
   });
+
+  const branches =
+    query.data?.pages.flatMap((page) => page.items) ?? ([] as RepoBranch[]);
+
+  return {
+    ...query,
+    branches,
+  };
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useRef } from "react";
+import { Loader2 } from "lucide-react";
 
 import {
   BranchRow,
@@ -10,21 +11,65 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { cn } from "@/shared/lib/utils";
+import type { RepoBranchesParams } from "@/shared/api/repoBranches";
 
 type RepoBranchListWidgetProps = {
   repoId: string | null | undefined;
+  params?: Omit<RepoBranchesParams, "cursor">;
   className?: string;
 };
 
 function RepoBranchListWidgetComponent({
   repoId,
+  params,
   className,
 }: RepoBranchListWidgetProps) {
   const normalizedRepoId =
     typeof repoId === "string" && repoId.trim().length > 0 ? repoId.trim() : null;
 
-  const { data, isLoading, error, refetch } = useRepoBranches(normalizedRepoId);
-  const branches = data ?? [];
+  const {
+    branches,
+    isLoading,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useRepoBranches(normalizedRepoId, params);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    if (!hasNextPage) return;
+
+    let blocked = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        if (entry.isIntersecting && !blocked && !isFetchingNextPage) {
+          blocked = true;
+          fetchNextPage().finally(() => {
+            blocked = false;
+          });
+        }
+      },
+      {
+        root: null,
+        rootMargin: "200px 0px 200px 0px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   if (!normalizedRepoId) {
     return (
@@ -94,8 +139,14 @@ function RepoBranchListWidgetComponent({
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       {branches.map((branch) => (
-        <BranchRow key={branch.name} branch={branch} />
+        <BranchRow key={branch.id} branch={branch} />
       ))}
+      <div ref={sentinelRef} className="h-1 w-full" />
+      {hasNextPage && isFetchingNextPage && (
+        <div className="flex justify-center py-3 text-sm text-muted-foreground/70">
+          <Loader2 className="size-4 animate-spin" />
+        </div>
+      )}
     </div>
   );
 }
