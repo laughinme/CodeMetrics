@@ -22,7 +22,7 @@ def init_scheduler(
     scheduler.add_job(
         func=run_initial_projects_sync,
         trigger="date",
-        run_date=datetime.now(UTC) + timedelta(seconds=2),
+        run_date=datetime.now(UTC) + timedelta(seconds=10),
         id="external-api-initial-sync",
         kwargs={
             "base_url": api_base_url,

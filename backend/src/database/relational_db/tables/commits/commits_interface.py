@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,11 +27,13 @@ class CommitInterface:
         model: CommitModel,
         author: Author | None,
         committer: Author | None,
-    ) -> Commit:
+    ) -> tuple[Commit, bool]:
         commit = await self.session.get(Commit, model.sha)
+        created = False
         if commit is None:
             commit = Commit(sha=model.sha, repo_id=repository.id)
             self.session.add(commit)
+            created = True
         else:
             commit.repo_id = repository.id
 
@@ -54,7 +57,7 @@ class CommitInterface:
         commit.old_tag_names = model.old_tags or []
         commit.is_merge_commit = len(commit.parents) > 1 or commit.is_merge_commit
 
-        return commit
+        return commit, created
 
     async def apply_diff_stats(
         self,
@@ -92,6 +95,59 @@ class CommitInterface:
         stmt = select(Commit).where(Commit.repo_id == repository_id)
         if after is not None:
             stmt = stmt.where(Commit.created_at >= after)
+        if cursor is not None:
+            cursor_dt, cursor_sha = cursor
+            stmt = stmt.where(
+                (Commit.created_at < cursor_dt)
+                | ((Commit.created_at == cursor_dt) & (Commit.sha < cursor_sha))
+            )
+
+        stmt = (
+            stmt.order_by(Commit.created_at.desc(), Commit.sha.desc())
+            .limit(limit + 1)
+            .options(
+                selectinload(Commit.author),
+                selectinload(Commit.committer),
+                selectinload(Commit.files),
+                selectinload(Commit.repository).selectinload(Repository.project),
+            )
+        )
+
+        result = await self.session.execute(stmt)
+        commits = list(result.scalars().all())
+
+        next_cursor = None
+        if len(commits) > limit:
+            overflow = commits.pop(limit)
+            next_cursor = (overflow.created_at, overflow.sha)
+
+        return commits, next_cursor
+
+    async def list_recent_filtered(
+        self,
+        *,
+        limit: int,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        project_id: int | None = None,
+        repo_ids: Sequence[uuid.UUID] | None = None,
+        author_ids: Sequence[uuid.UUID] | None = None,
+        cursor: tuple[datetime, str] | None = None,
+    ) -> tuple[list[Commit], tuple[datetime, str] | None]:
+        if limit <= 0:
+            return [], None
+
+        stmt = select(Commit).join(Repository)
+        if project_id is not None:
+            stmt = stmt.where(Repository.project_id == project_id)
+        if repo_ids:
+            stmt = stmt.where(Commit.repo_id.in_(tuple(repo_ids)))
+        if author_ids:
+            stmt = stmt.where(Commit.author_id.in_(tuple(author_ids)))
+        if since is not None:
+            stmt = stmt.where(Commit.created_at >= since)
+        if until is not None:
+            stmt = stmt.where(Commit.created_at <= until)
         if cursor is not None:
             cursor_dt, cursor_sha = cursor
             stmt = stmt.where(
