@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time
 from typing import Sequence
@@ -72,34 +71,14 @@ class AggregatedMetricsService:
     ) -> DashboardSummary:
         agg_filter = self._build_filter(params)
 
-        kpi_task = self._aggregates.get_kpis(agg_filter)
-        msg_task = self._aggregates.get_message_quality(agg_filter)
-        size_task = self._aggregates.get_size_histogram(agg_filter)
-        daily_task = self._aggregates.get_daily_commit_series(agg_filter)
-        hour_task = self._aggregates.get_hourly_heatmap(agg_filter)
-        weekday_task = self._aggregates.get_weekday_heatmap(agg_filter)
-        authors_task = self._aggregates.get_top_authors(agg_filter, limit=10)
-        hot_files_task = self._aggregates.get_hot_files(agg_filter, limit=3)
-
-        (
-            kpi,
-            message_quality,
-            size_stats,
-            daily_points,
-            hour_points,
-            weekday_points,
-            top_authors,
-            hot_files,
-        ) = await asyncio.gather(
-            kpi_task,
-            msg_task,
-            size_task,
-            daily_task,
-            hour_task,
-            weekday_task,
-            authors_task,
-            hot_files_task,
-        )
+        kpi = await self._aggregates.get_kpis(agg_filter)
+        message_quality = await self._aggregates.get_message_quality(agg_filter)
+        size_stats = await self._aggregates.get_size_histogram(agg_filter)
+        daily_points = await self._aggregates.get_daily_commit_series(agg_filter)
+        hour_points = await self._aggregates.get_hourly_heatmap(agg_filter)
+        weekday_points = await self._aggregates.get_weekday_heatmap(agg_filter)
+        top_authors = await self._aggregates.get_top_authors(agg_filter, limit=10)
+        hot_files = await self._aggregates.get_hot_files(agg_filter, limit=3)
 
         series = DashboardSeries(
             commits_daily=[CommitSeriesPoint(date=p.day, count=p.commits) for p in daily_points],
@@ -178,12 +157,10 @@ class AggregatedMetricsService:
 
     async def get_developers_summary(self, *, params: _FilterParams) -> DevelopersSummary:
         agg_filter = self._build_filter(params)
-        kpi, message_quality, size_stats, top_authors = await asyncio.gather(
-            self._aggregates.get_kpis(agg_filter),
-            self._aggregates.get_message_quality(agg_filter),
-            self._aggregates.get_size_histogram(agg_filter),
-            self._aggregates.get_top_authors(agg_filter, limit=50),
-        )
+        kpi = await self._aggregates.get_kpis(agg_filter)
+        message_quality = await self._aggregates.get_message_quality(agg_filter)
+        size_stats = await self._aggregates.get_size_histogram(agg_filter)
+        top_authors = await self._aggregates.get_top_authors(agg_filter, limit=50)
 
         total_commits = kpi.commits
         denominator = total_commits if total_commits > 0 else 1
@@ -233,21 +210,12 @@ class AggregatedMetricsService:
         )
         agg_filter = self._build_filter(author_params)
 
-        kpi_task = self._aggregates.get_kpis(agg_filter)
-        msg_task = self._aggregates.get_message_quality(agg_filter)
-        size_task = self._aggregates.get_size_histogram(agg_filter)
-        daily_task = self._aggregates.get_daily_commit_series(agg_filter)
-        hour_task = self._aggregates.get_hourly_heatmap(agg_filter)
-        weekday_task = self._aggregates.get_weekday_heatmap(agg_filter)
-
-        kpi, message_quality, size_stats, daily_points, hour_points, weekday_points = await asyncio.gather(
-            kpi_task,
-            msg_task,
-            size_task,
-            daily_task,
-            hour_task,
-            weekday_task,
-        )
+        kpi = await self._aggregates.get_kpis(agg_filter)
+        message_quality = await self._aggregates.get_message_quality(agg_filter)
+        size_stats = await self._aggregates.get_size_histogram(agg_filter)
+        daily_points = await self._aggregates.get_daily_commit_series(agg_filter)
+        hour_points = await self._aggregates.get_hourly_heatmap(agg_filter)
+        weekday_points = await self._aggregates.get_weekday_heatmap(agg_filter)
 
         series = DashboardSeries(
             commits_daily=[CommitSeriesPoint(date=p.day, count=p.commits) for p in daily_points],

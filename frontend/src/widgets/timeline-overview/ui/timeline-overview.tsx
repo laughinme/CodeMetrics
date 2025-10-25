@@ -22,7 +22,9 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card"
 import { Skeleton } from "@/shared/components/ui/skeleton"
+import { useSyncStatus, type SyncStatus } from "@/shared/api/status"
 import { getMetricsRangeBounds } from "@/shared/lib/metrics-range"
+import { cn } from "@/shared/lib/utils"
 
 type TimelineOverviewWidgetProps = {
   projectId: number | null
@@ -79,6 +81,7 @@ export function TimelineOverviewWidget({
     until: effectiveUntil,
     projectId,
   })
+  const { data: syncStatus } = useSyncStatus()
 
   const periodLabel = React.useMemo(() => {
     const start = periodFormatter.format(effectiveSince)
@@ -200,11 +203,17 @@ export function TimelineOverviewWidget({
   }
 
   if (!data || dailyData.length === 0) {
-    return <TimelineOverviewEmptyState className={className} />
+    return (
+      <div className={className}>
+        <SyncStatusSections status={syncStatus} />
+        <TimelineOverviewEmptyState />
+      </div>
+    )
   }
 
   return (
     <div className={className}>
+      <SyncStatusSections status={syncStatus} />
       <SectionCards cards={kpiCards} />
       <div className="mt-6 flex flex-col gap-6">
         <TimelineTrendChart
@@ -230,6 +239,7 @@ export function TimelineOverviewWidget({
 function TimelineOverviewSkeleton({ className }: { className?: string }) {
   return (
     <div className={className}>
+      <SyncStatusSections status={null} />
       <DashboardSkeletonCards />
       <div className="mt-6 flex flex-col gap-6">
         <Card className="rounded-3xl border-border/30 bg-card/80 p-6 shadow-[0_10px_60px_-28px_rgba(76,81,255,0.35)] backdrop-blur">
@@ -282,7 +292,12 @@ function TimelineOverviewErrorState({
 
 function TimelineOverviewEmptyState({ className }: { className?: string }) {
   return (
-    <Card className="rounded-3xl border-dashed border-border/40 bg-card/60 px-6 py-5 text-sm text-muted-foreground backdrop-blur">
+    <Card
+      className={cn(
+        "rounded-3xl border-dashed border-border/40 bg-card/60 px-6 py-5 text-sm text-muted-foreground backdrop-blur",
+        className,
+      )}
+    >
       <CardHeader className="p-0">
         <CardTitle className="text-base font-semibold text-foreground">
           Недостаточно данных для построения таймлайна
@@ -293,6 +308,53 @@ function TimelineOverviewEmptyState({ className }: { className?: string }) {
       </CardHeader>
     </Card>
   )
+}
+
+type SyncStatusSectionsProps = {
+  status: SyncStatus | null | undefined
+}
+
+function SyncStatusSections({ status }: SyncStatusSectionsProps) {
+  if (!status) return null
+
+  if (status.inProgress) {
+    const progressValue = Math.min(100, Math.max(status.progress ?? 15, 5))
+    return (
+      <Card className="mb-4 rounded-3xl border-emerald-500/40 bg-emerald-500/10 px-6 py-4 text-sm text-emerald-50 shadow-[0_15px_45px_-30px_rgba(16,185,129,0.8)]">
+        <CardHeader className="p-0">
+          <CardTitle className="text-base font-semibold text-emerald-50">
+            Импортируем данные из репозиториев
+          </CardTitle>
+          <CardDescription className="text-xs text-emerald-50/80">
+            Первичная синхронизация может занять несколько минут. Вы можете оставить вкладку открытой.
+          </CardDescription>
+        </CardHeader>
+        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-emerald-400/30">
+          <div
+            className="h-full rounded-full bg-emerald-400 transition-all duration-700"
+            style={{ width: `${progressValue}%` }}
+          />
+        </div>
+      </Card>
+    )
+  }
+
+  if (status.phase === "error") {
+    return (
+      <Card className="mb-4 rounded-3xl border-destructive/30 bg-destructive/10 px-6 py-4 text-sm text-destructive shadow-[0_15px_45px_-30px_rgba(220,38,38,0.65)]">
+        <CardHeader className="p-0">
+          <CardTitle className="text-base font-semibold">
+            Не удалось завершить синхронизацию
+          </CardTitle>
+          <CardDescription className="text-xs text-destructive/80">
+            {status.lastError || "Проверьте настройки подключения к внешнему репозиторию."}
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
+
+  return null
 }
 
 function DashboardSkeletonCards() {
