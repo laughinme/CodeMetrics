@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 from fastapi import APIRouter, Query, Depends
 
-from service.metrics_service import MetricsService
+from service.metrics_service import MetricsService, get_metrics_service
 
 router = APIRouter()
 
@@ -18,6 +18,6 @@ async def get_activity_streaks(
     since: datetime = Query(..., description="Start date in UTC"),
     until: datetime = Query(..., description="End date in UTC"),
     project_id: Optional[str] = Query(None, description="Filter by project key"),
-    metrics_service: MetricsService = Depends(),
+    metrics_service: MetricsService = Depends(get_metrics_service),
 ) -> Dict[str, Any]:
     ...

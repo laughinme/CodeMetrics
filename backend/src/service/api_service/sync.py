@@ -47,8 +47,8 @@ class SourceCodeSyncService:
         uow: UoW,
         *,
         page_size: int = 500,
-        commit_window_days: int = 90,
-        max_commit_pages: int = 20,
+        commit_window_days: int = 365*1,
+        max_commit_pages: int = 100,
         resync_overlap_seconds: int = 60,
     ) -> None:
         self._client = client
