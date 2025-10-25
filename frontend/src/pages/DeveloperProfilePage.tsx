@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react"
 import { useEffect, useMemo, useState } from "react"
 import { Link, useLocation, useParams } from "react-router-dom"
-import { ArrowLeft, Mail } from "lucide-react"
+import { ArrowLeft, Lightbulb, Mail } from "lucide-react"
 
 import {
   DeveloperActivityChart,
@@ -452,18 +452,73 @@ function RecommendationsCard({
 }: {
   recommendations: DeveloperRecommendation[]
 }) {
+  const severityConfig: Record<
+    DeveloperRecommendation["severity"],
+    { label: string; className: string }
+  > = {
+    info: {
+      label: "Info",
+      className:
+        "border-emerald-300/40 bg-emerald-400/10 text-emerald-100 shadow-[0_0_25px_-12px_rgba(16,185,129,0.8)]",
+    },
+    warning: {
+      label: "Warning",
+      className:
+        "border-amber-300/60 bg-amber-400/15 text-amber-900 shadow-[0_0_25px_-12px_rgba(245,158,11,0.8)]",
+    },
+    success: {
+      label: "Positive",
+      className:
+        "border-teal-300/50 bg-teal-400/10 text-teal-100 shadow-[0_0_25px_-12px_rgba(45,212,191,0.75)]",
+    },
+    critical: {
+      label: "Critical",
+      className:
+        "border-rose-400/40 bg-rose-500/15 text-rose-100 shadow-[0_0_25px_-12px_rgba(244,63,94,0.85)]",
+    },
+  }
+
   return (
-    <Card className="rounded-3xl border-border/30 bg-card/80 p-6 shadow-[0_10px_60px_-28px_rgba(76,81,255,0.35)] backdrop-blur">
-      <h2 className="text-lg font-semibold text-foreground/90">
-        Рекомендации
-      </h2>
-      <ul className="mt-4 space-y-4 text-sm text-foreground/85">
-        {recommendations.map((item) => (
-          <li key={item.id} className="flex flex-col gap-1">
-            <span className="font-medium text-foreground">{item.title}</span>
-            <span className="text-muted-foreground">{item.description}</span>
-          </li>
-        ))}
+    <Card className="rounded-3xl border-emerald-400/35 bg-emerald-400/15 p-6 text-foreground">
+      <div className="flex items-center gap-3">
+        <div className="rounded-2xl border border-emerald-500/50 bg-emerald-500/20 p-3 text-emerald-900">
+          <Lightbulb className="h-6 w-6" />
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-emerald-900/70">
+            Insights
+          </p>
+          <h2 className="text-lg font-semibold text-foreground">
+            Рекомендации для разработчика
+          </h2>
+        </div>
+      </div>
+      <ul className="mt-6 flex flex-col gap-4 text-sm">
+        {recommendations.map((item) => {
+          const severity = severityConfig[item.severity] ?? severityConfig.info
+          return (
+            <li
+              key={item.id}
+              className="group relative rounded-2xl border border-emerald-500/30 bg-emerald-100/40 p-4 transition hover:border-emerald-500/60"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-base font-semibold text-foreground">
+                  {item.title}
+                </span>
+                <Badge
+                  variant="secondary"
+                  className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${severity.className} text-emerald-900`}
+                >
+                  {severity.label}
+                </Badge>
+              </div>
+              <p className="mt-3 text-sm text-foreground/80">
+                {item.description}
+              </p>
+              <div className="pointer-events-none absolute inset-x-3 bottom-2 h-px bg-emerald-500/40 opacity-0 transition group-hover:opacity-100" />
+            </li>
+          )
+        })}
       </ul>
     </Card>
   )
