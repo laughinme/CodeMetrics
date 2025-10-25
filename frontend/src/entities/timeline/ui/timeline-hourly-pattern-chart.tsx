@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { cn } from "@/shared/lib/utils"
@@ -38,6 +39,16 @@ export function TimelineHourlyPatternChart({
   data,
   className,
 }: TimelineHourlyPatternChartProps) {
+  const yAxisMax = useMemo(() => {
+    const maxShare = data.reduce(
+      (max, item) => Math.max(max, item.sharePct ?? 0),
+      0,
+    )
+    if (maxShare <= 0) return 10
+    const withMargin = Math.ceil(maxShare * 1.1)
+    return Math.min(100, withMargin)
+  }, [data])
+
   return (
     <Card
       className={cn(
@@ -65,7 +76,7 @@ export function TimelineHourlyPatternChart({
               axisLine={false}
               tickLine={false}
               tickMargin={8}
-              domain={[0, 100]}
+              domain={[0, yAxisMax]}
               tick={{ fill: "rgba(226,232,240,0.65)", fontSize: 11 }}
               tickFormatter={(value: number) => `${percentFormatter.format(value)}%`}
             />
