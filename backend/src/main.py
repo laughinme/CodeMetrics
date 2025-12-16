@@ -59,6 +59,9 @@ allowed_origins = [
     "http://localhost:5173",
     "https://localhost:5173",
     "https://68fb161ab7e72a5feaf4dc52--codemetricsproto.netlify.app",
+    "https://codemetr1cs.netlify.app",
+    "https://luhgeek1.github.io/CodeMetrics1",
+    "https://luhgeek1.github.io",
 ]
 
 # if config.SITE_URL:

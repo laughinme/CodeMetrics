@@ -20,7 +20,7 @@ from database.relational_db import (
     SizeBucketDelta,
     UoW,
 )
-from domain.parsing.schemas import (
+from domain.parsing import (
     BranchModel,
     CommitModel,
     DiffModel,
