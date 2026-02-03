@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: backend
+    container_name: backend_codemetrics
     env_file:
       - ./backend/.env
     environment:
@@ -27,7 +27,7 @@ services:
       args:
         VITE_API_BASE_URL: https://localhost
         VITE_ENABLE_HTTPS: "false"
-    container_name: nginx
+    container_name: nginx_codemetrics
     ports:
       - "80:80"
       - "443:443"
@@ -38,7 +38,7 @@ services:
 
   db:
     image: postgres:16-alpine
-    container_name: postgres
+    container_name: postgres_codemetrics
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
@@ -54,7 +54,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis_service
+    container_name: redis_codemetrics
     volumes:
       - redis_data:/data
     healthcheck:

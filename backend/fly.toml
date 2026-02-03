@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for codemetrics on 2025-10-24T22:06:53+07:00
+# fly.toml app configuration file generated for codemetrics-backend on 2026-02-03T22:24:46+07:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'codemetrics'
-primary_region = 'cdg'
+app = 'codemetrics-backend'
+primary_region = 'fra'
 
 [build]
 
@@ -13,10 +13,10 @@ primary_region = 'cdg'
   force_https = true
   auto_stop_machines = 'off'
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
   processes = ['app']
 
 [[vm]]
   memory = '2gb'
-  cpu_kind = 'shared'
   cpus = 1
+  memory_mb = 2048

@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
+from sqlalchemy.orm import load_only, noload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.parsing import ProjectModel
@@ -44,16 +45,56 @@ class ProjectInterface:
         return await self.session.scalar(stmt)
     
     async def get_by_id(self, id: int) -> Project | None:
-        stmt = select(Project).where(Project.id == id)
+        stmt = (
+            select(Project)
+            .where(Project.id == id)
+            .options(
+                selectinload(Project.repositories).options(
+                    load_only(
+                        Repository.id,
+                        Repository.project_id,
+                        Repository.updated_at,
+                    ),
+                    noload(Repository.commits),
+                    noload(Repository.branches),
+                    noload(Repository.project),
+                )
+            )
+        )
         return await self.session.scalar(stmt)
     
     async def list_all(self) -> list[Project]:
-        rows = await self.session.scalars(select(Project))
+        stmt = select(Project).options(
+            selectinload(Project.repositories).options(
+                load_only(
+                    Repository.id,
+                    Repository.project_id,
+                    Repository.updated_at,
+                ),
+                noload(Repository.commits),
+                noload(Repository.branches),
+                noload(Repository.project),
+            )
+        )
+        rows = await self.session.scalars(stmt)
         return list(rows.all())
 
     async def get_repos(self, project_id: int) -> list[Repository]:
         rows = await self.session.scalars(
             select(Repository)
             .where(Repository.project_id == project_id)
+            .options(
+                load_only(
+                    Repository.id,
+                    Repository.project_id,
+                    Repository.name,
+                    Repository.default_branch,
+                    Repository.description,
+                    Repository.updated_at,
+                ),
+                noload(Repository.commits),
+                noload(Repository.branches),
+                noload(Repository.project),
+            )
         )
         return list(rows.all())
