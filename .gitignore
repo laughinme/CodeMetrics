@@ -219,8 +219,10 @@ secrets/
 /backend/src/media
 test.py
 /.vscode
+*.env
 
 # Local Netlify folder
 .netlify
 backend/recomends_final.md
 backend/swagger.json
+.vercel
