@@ -10,7 +10,7 @@ from domain.entities import ProjectOut
 router = APIRouter()
 
 @router.get(
-    path="/",
+    path="",
     response_model=list[ProjectOut],
 )
 async def get_projects(

@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get(
-    path='/',
+    path='',
     response_model=CursorPage[UserModel],
     summary='List users with filters and search (cursor pagination)',
 )

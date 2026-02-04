@@ -22,6 +22,6 @@ export const logoutUser = async (): Promise<void> => {
 };
 
 export const getMyProfile = async (): Promise<AuthUser> => {
-  const response = await apiProtected.get<AuthUser>("/users/me/");
+  const response = await apiProtected.get<AuthUser>("/users/me");
   return response.data;
 };

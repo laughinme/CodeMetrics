@@ -5,11 +5,10 @@ def get_languages_router() -> APIRouter:
     from .list import router as list_router
 
     router = APIRouter(
-        prefix='/languages',
         tags=['Languages'],
         responses={401: {"description": "Not authorized"}}
     )
 
-    router.include_router(list_router)
+    router.include_router(list_router, prefix="/languages")
 
     return router
