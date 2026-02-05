@@ -24,8 +24,6 @@ function App() {
   const {
     isUserLoading,
     isRestoringSession,
-    csrfWarning,
-    dismissCsrfWarning
   } = authData;
 
   if (isRestoringSession) {
@@ -38,40 +36,10 @@ function App() {
 
   return (
     <BrowserRouter>
-      {isDebug ? (
-        <CsrfWarningBanner message={csrfWarning} onDismiss={dismissCsrfWarning} />
-      ) : null}
       <AppRoutes />
     </BrowserRouter>
   );
 }
-
-const CsrfWarningBanner = ({
-  message,
-  onDismiss
-}: {
-  message: string | null;
-  onDismiss: () => void;
-}) => {
-  if (!message) {
-    return null;
-  }
-
-  return (
-    <div className="border-b border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-200">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <span className="text-sm sm:text-base">{message}</span>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="rounded-md border border-amber-500/30 bg-background px-3 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-500/10 dark:text-amber-200"
-        >
-          Скрыть
-        </button>
-      </div>
-    </div>
-  );
-};
 
 const FullScreenLoader = ({ label }: { label?: string }) => {
   return (
