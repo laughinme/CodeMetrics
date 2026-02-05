@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 
 import { Separator } from "@/shared/components/ui/separator"
 import { SidebarTrigger } from "@/shared/components/ui/sidebar"
+import { ThemeToggle } from "@/shared/components/theme-toggle"
 
 type SiteHeaderProps = {
   title?: string
@@ -34,14 +35,13 @@ export function SiteHeader({
             ) : null}
           </div>
         </div>
-        {(filters || actions) && (
-          <div className="ml-auto flex items-center gap-2 lg:gap-3">
-            {filters ? <div className="flex items-center gap-2">{filters}</div> : null}
-            {actions ? (
-              <div className="flex items-center gap-2">{actions}</div>
-            ) : null}
-          </div>
-        )}
+        <div className="ml-auto flex items-center gap-2 lg:gap-3">
+          {filters ? <div className="flex items-center gap-2">{filters}</div> : null}
+          {actions ? (
+            <div className="flex items-center gap-2">{actions}</div>
+          ) : null}
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   )

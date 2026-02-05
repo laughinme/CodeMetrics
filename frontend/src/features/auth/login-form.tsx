@@ -54,16 +54,11 @@ export function LoginForm({
   ...props
 }: LoginFormProps) {
   return (
-    <div
-      className={cn("flex flex-col gap-6 text-neutral-200", className)}
-      {...props}
-    >
-      <Card className="bg-neutral-900 border-neutral-800 shadow-none">
+    <div className={cn("flex flex-col gap-6 text-foreground", className)} {...props}>
+      <Card className="shadow-none">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-xl font-semibold text-white">
-            Welcome back
-          </CardTitle>
-          <CardDescription className="text-sm text-neutral-400">
+          <CardTitle className="text-xl font-semibold">Welcome back</CardTitle>
+          <CardDescription className="text-sm">
             Sign in with your email and password
           </CardDescription>
         </CardHeader>
@@ -72,10 +67,7 @@ export function LoginForm({
             <FieldGroup>
               {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
               <Field>
-                <FieldLabel
-                  htmlFor="email"
-                  className="text-sm font-medium text-neutral-200"
-                >
+                <FieldLabel htmlFor="email" className="text-sm font-medium">
                   Email
                 </FieldLabel>
                 <Input
@@ -87,14 +79,10 @@ export function LoginForm({
                   value={email}
                   onChange={(event) => onEmailChange(event.target.value)}
                   disabled={disabled}
-                  className="bg-neutral-950 border-neutral-800 text-neutral-100 placeholder:text-neutral-500"
                 />
               </Field>
               <Field>
-                <FieldLabel
-                  htmlFor="password"
-                  className="text-sm font-medium text-neutral-200"
-                >
+                <FieldLabel htmlFor="password" className="text-sm font-medium">
                   Password
                 </FieldLabel>
                 <Input
@@ -105,23 +93,21 @@ export function LoginForm({
                   value={password}
                   onChange={(event) => onPasswordChange(event.target.value)}
                   disabled={disabled}
-                  className="bg-neutral-950 border-neutral-800 text-neutral-100 placeholder:text-neutral-500"
                 />
               </Field>
               <Field>
                 <Button
                   type="submit"
                   disabled={submitDisabled || disabled}
-                  className="bg-white text-neutral-900 hover:bg-neutral-200 disabled:bg-neutral-700 disabled:text-neutral-400"
                 >
                   {submitLabel}
                 </Button>
-                <FieldDescription className="text-center text-sm text-neutral-400">
+                <FieldDescription className="text-center text-sm text-muted-foreground">
                   Don&apos;t have an account?{" "}
                   <button
                     type="button"
                     onClick={onSwitchToSignup}
-                    className="underline-offset-4 hover:underline text-white"
+                    className="underline-offset-4 hover:underline text-primary"
                   >
                     Sign up
                   </button>
@@ -130,20 +116,19 @@ export function LoginForm({
             </FieldGroup>
           </form>
           {demoAccount ? (
-            <div className="mt-6 border-t border-neutral-800 pt-5">
-              <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                Demo access
+            <div className="mt-6 border-t border-border/70 pt-5">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Тестовый аккаунт
               </div>
-              <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+              <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-border/70 bg-muted/40 px-4 py-3">
                 <div className="text-sm">
-                  <div className="font-medium text-white">{demoAccount.label}</div>
-                  <div className="text-xs text-neutral-400">{demoAccount.email}</div>
+                  <div className="font-medium">{demoAccount.label}</div>
+                  <div className="text-xs text-muted-foreground">{demoAccount.email}</div>
                 </div>
                 <Button
                   type="button"
                   onClick={() => onDemoLogin?.(demoAccount)}
                   disabled={disabled}
-                  className="bg-white text-neutral-900 hover:bg-neutral-200 disabled:bg-neutral-700 disabled:text-neutral-400"
                 >
                   Войти
                 </Button>

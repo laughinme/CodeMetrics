@@ -4,6 +4,7 @@ import { useAuth } from "@/app/providers/auth/useAuth";
 import type { AuthCredentials } from "@/entities/auth/model";
 import { LoginForm } from "@/features/auth/login-form";
 import { SignupForm } from "@/features/auth/signup-form";
+import { ThemeToggle } from "@/shared/components/theme-toggle";
 
 type Mode = "login" | "register";
 
@@ -45,10 +46,12 @@ export default function AuthPage(): ReactElement {
 
   if (!auth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50 text-slate-700">
-        <div className="rounded-2xl border border-red-200 bg-white p-6 shadow-lg">
-          <h2 className="text-2xl font-semibold text-red-500">Контекст аутентификации не найден</h2>
-          <p className="mt-2">Убедитесь, что используете компонент внутри `AuthProvider`.</p>
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <div className="rounded-2xl border border-destructive/30 bg-card p-6 shadow-lg">
+          <h2 className="text-2xl font-semibold text-destructive">Контекст аутентификации не найден</h2>
+          <p className="mt-2 text-muted-foreground">
+            Убедитесь, что используете компонент внутри `AuthProvider`.
+          </p>
         </div>
       </div>
     );
@@ -111,7 +114,10 @@ export default function AuthPage(): ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-4 py-12 text-white overflow-hidden">
+    <div className="relative min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-12 overflow-hidden">
+      <div className="absolute right-4 top-4 z-10">
+        <ThemeToggle />
+      </div>
       <motion.div
         className="absolute inset-0 pointer-events-none"
         initial={{ opacity: 0 }}
@@ -119,7 +125,7 @@ export default function AuthPage(): ReactElement {
         transition={{ duration: 1.2, ease: "easeOut" }}
       >
         <motion.div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_rgba(0,0,0,0))]"
+          className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,0,0,0.06),_rgba(0,0,0,0))] dark:bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_rgba(0,0,0,0))]"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
@@ -133,13 +139,13 @@ export default function AuthPage(): ReactElement {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         {csrfWarning ? (
-          <div className="mb-6 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 backdrop-blur">
+          <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 backdrop-blur dark:text-amber-200">
             <div className="flex items-start justify-between gap-3">
               <span>{csrfWarning}</span>
               <button
                 type="button"
                 onClick={dismissCsrfWarning}
-                className="text-amber-200 underline-offset-4 hover:underline"
+                className="text-amber-700 underline-offset-4 hover:underline dark:text-amber-200"
               >
                 Понятно
               </button>

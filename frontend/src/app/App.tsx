@@ -10,10 +10,10 @@ function App() {
   if (!authData) {
    
     return (
-      <div className="min-h-screen flex items-center justify-center bg-red-100">
-        <div className="p-8 bg-white rounded-lg shadow-md text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Ошибка конфигурации</h1>
-          <p className="text-slate-700">
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <div className="p-8 bg-card rounded-lg shadow-md text-center border border-destructive/30">
+          <h1 className="text-2xl font-bold text-destructive mb-2">Ошибка конфигурации</h1>
+          <p className="text-muted-foreground">
             Контекст аутентификации не найден. Убедитесь, что ваше приложение обернуто в <code>&lt;AuthProvider&gt;</code>.
           </p>
         </div>
@@ -58,13 +58,13 @@ const CsrfWarningBanner = ({
   }
 
   return (
-    <div className="bg-amber-50 border-b border-amber-200 text-amber-800">
+    <div className="border-b border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-200">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <span className="text-sm sm:text-base">{message}</span>
         <button
           type="button"
           onClick={onDismiss}
-          className="rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100"
+          className="rounded-md border border-amber-500/30 bg-background px-3 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-500/10 dark:text-amber-200"
         >
           Скрыть
         </button>
@@ -75,9 +75,9 @@ const CsrfWarningBanner = ({
 
 const FullScreenLoader = ({ label }: { label?: string }) => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50">
-      <div className="h-10 w-10 rounded-full border-4 border-slate-200 border-t-slate-600 animate-spin" />
-      {label ? <p className="text-lg text-slate-500">{label}</p> : null}
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background">
+      <div className="h-10 w-10 rounded-full border-4 border-muted border-t-foreground animate-spin" />
+      {label ? <p className="text-lg text-muted-foreground">{label}</p> : null}
     </div>
   );
 };
