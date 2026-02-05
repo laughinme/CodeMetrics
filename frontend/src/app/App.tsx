@@ -4,6 +4,7 @@ import { AppRoutes } from "@/app/routes/AppRoutes";
 
 function App() {
   const authData = useAuth();
+  const isDebug = import.meta.env.VITE_DEBUG === "true";
 
   
   if (!authData) {
@@ -28,24 +29,18 @@ function App() {
   } = authData;
 
   if (isRestoringSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-lg text-slate-500">Загрузка сессии...</p>
-      </div>
-    );
+    return <FullScreenLoader label={isDebug ? "Загрузка сессии..." : undefined} />;
   }
 
   if (isUserLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-lg text-slate-500">Загрузка пользователя...</p>
-      </div>
-    );
+    return <FullScreenLoader label={isDebug ? "Загрузка пользователя..." : undefined} />;
   }
 
   return (
     <BrowserRouter>
-      <CsrfWarningBanner message={csrfWarning} onDismiss={dismissCsrfWarning} />
+      {isDebug ? (
+        <CsrfWarningBanner message={csrfWarning} onDismiss={dismissCsrfWarning} />
+      ) : null}
       <AppRoutes />
     </BrowserRouter>
   );
@@ -74,6 +69,15 @@ const CsrfWarningBanner = ({
           Скрыть
         </button>
       </div>
+    </div>
+  );
+};
+
+const FullScreenLoader = ({ label }: { label?: string }) => {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50">
+      <div className="h-10 w-10 rounded-full border-4 border-slate-200 border-t-slate-600 animate-spin" />
+      {label ? <p className="text-lg text-slate-500">{label}</p> : null}
     </div>
   );
 };
