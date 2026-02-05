@@ -69,6 +69,11 @@ export default function AuthPage(): ReactElement {
   const error = mode === "login" ? loginError : registerError;
   const errorMessage = error ? getErrorMessage(error) : null;
   const canSubmit = Boolean(email.trim() && password.trim() && !isLoading);
+  const demoAccount = {
+    label: "Demo User",
+    email: "user@example.com",
+    password: "string"
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -87,6 +92,21 @@ export default function AuthPage(): ReactElement {
       }
     } catch (err) {
       console.error("Ошибка аутентификации:", err);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    if (isLoading) {
+      return;
+    }
+    dismissCsrfWarning();
+    setMode("login");
+    setEmail(demoAccount.email);
+    setPassword(demoAccount.password);
+    try {
+      await login({ email: demoAccount.email, password: demoAccount.password });
+    } catch (err) {
+      console.error("Ошибка аутентификации (demo):", err);
     }
   };
 
@@ -146,6 +166,8 @@ export default function AuthPage(): ReactElement {
                 submitDisabled={!canSubmit}
                 errorMessage={errorMessage}
                 onSwitchToSignup={() => setMode("register")}
+                demoAccount={demoAccount}
+                onDemoLogin={handleDemoLogin}
               />
             </motion.div>
           ) : (

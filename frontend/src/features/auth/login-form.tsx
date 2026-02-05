@@ -29,6 +29,12 @@ type LoginFormProps = Omit<ComponentProps<"div">, "onSubmit"> & {
   submitDisabled?: boolean
   errorMessage?: string | null
   onSwitchToSignup: () => void
+  demoAccount?: {
+    label: string
+    email: string
+    password: string
+  }
+  onDemoLogin?: (account: { label: string; email: string; password: string }) => void
 }
 
 export function LoginForm({
@@ -43,6 +49,8 @@ export function LoginForm({
   submitDisabled = false,
   errorMessage,
   onSwitchToSignup,
+  demoAccount,
+  onDemoLogin,
   ...props
 }: LoginFormProps) {
   return (
@@ -121,6 +129,27 @@ export function LoginForm({
               </Field>
             </FieldGroup>
           </form>
+          {demoAccount ? (
+            <div className="mt-6 border-t border-neutral-800 pt-5">
+              <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                Demo access
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+                <div className="text-sm">
+                  <div className="font-medium text-white">{demoAccount.label}</div>
+                  <div className="text-xs text-neutral-400">{demoAccount.email}</div>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => onDemoLogin?.(demoAccount)}
+                  disabled={disabled}
+                  className="bg-white text-neutral-900 hover:bg-neutral-200 disabled:bg-neutral-700 disabled:text-neutral-400"
+                >
+                  Войти
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </div>

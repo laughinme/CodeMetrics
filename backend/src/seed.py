@@ -37,7 +37,7 @@ from domain.auth.enums.permissions import ADMIN_PERMISSIONS, SystemPermission
 from domain.auth.enums.roles import SystemRole
 from domain.parsing.schemas import BranchModel, CommitModel, GitUser, ProjectModel, RepositoryModel
 
-SEED_VERSION = "2026-02-03"
+SEED_VERSION = "2026-02-05"
 SHORT_MESSAGE_THRESHOLD = 50
 BINARY_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".ico"}
 
@@ -457,6 +457,13 @@ def _seed_users() -> list[dict[str, str]]:
             "email": "analyst@codemetrics.local",
             "password": os.getenv("SEED_ANALYST_PASSWORD", "metrics123"),
             "username": "analyst",
+            "role": SystemRole.MEMBER.value,
+            "language_code": "en",
+        },
+        {
+            "email": "user@example.com",
+            "password": os.getenv("SEED_TEST_PASSWORD", "string"),
+            "username": "test-user",
             "role": SystemRole.MEMBER.value,
             "language_code": "en",
         },
