@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from database.relational_db import (
     AggregateMetricsInterface,
@@ -44,6 +45,9 @@ class GitHubSyncService:
         max_commit_pages: int = 50,
         resync_overlap_seconds: int = 60,
         include_forks: bool = False,
+        flush_every_commits: int = 50,
+        max_repos_per_owner: int = 20,
+        user_repo_affiliation: str = "owner,collaborator,organization_member",
     ) -> None:
         self._client = client
         self._uow = uow
@@ -51,6 +55,9 @@ class GitHubSyncService:
         self._max_commit_pages = max_commit_pages
         self._resync_overlap = timedelta(seconds=resync_overlap_seconds)
         self._include_forks = include_forks
+        self._flush_every_commits = max(1, int(flush_every_commits))
+        self._max_repos_per_owner = max(0, int(max_repos_per_owner))
+        self._user_repo_affiliation = user_repo_affiliation or "owner,collaborator,organization_member"
 
         session = uow.session
         self._projects = ProjectInterface(session)
@@ -60,6 +67,8 @@ class GitHubSyncService:
         self._commits = CommitInterface(session)
         self._commit_files = CommitFileInterface(session)
         self._aggregates = AggregateMetricsInterface(session)
+        self._owner_projects: dict[str, Any] = {}
+        self._synced_repo_full_names: set[str] = set()
 
     async def sync_user_and_orgs(self, *, integration_id) -> None:
         """
@@ -89,9 +98,11 @@ class GitHubSyncService:
                 external_id=me.id,
                 integration_id=integration_id,
             )
+            self._owner_projects[me.login.lower()] = me_project
             await self._uow.session.flush()
-            await self._sync_user_repos(me_project, me.login)
+            # Persist project early so dashboards can pick up partial sync progress.
             await self._uow.commit()
+            await self._sync_user_repos(me_project, me.login, integration_id=integration_id)
         except GitHubAPIError as exc:
             logger.error("Failed to sync user repos: %s", exc)
         except Exception:
@@ -119,11 +130,13 @@ class GitHubSyncService:
                 external_id=org.id,
                 integration_id=integration_id,
             )
+            self._owner_projects[org.login.lower()] = project
             await self._uow.session.flush()
+            # Persist project early so dashboards can pick up partial sync progress.
+            await self._uow.commit()
 
             try:
                 await self._sync_org_repos(project, org.login)
-                await self._uow.commit()
             except GitHubAPIError as exc:
                 logger.error("Failed to sync org %s: %s", org.login, exc)
             except Exception:
@@ -135,8 +148,10 @@ class GitHubSyncService:
 
     async def _sync_org_repos(self, project, org_login: str) -> None:
         repos = await self._client.list_org_repos(org_login)
+        if self._max_repos_per_owner:
+            repos = repos[: self._max_repos_per_owner]
         for repo in repos:
-            if repo.is_fork and not self._include_forks:
+            if not self._should_sync_repo(repo):
                 continue
 
             repo_model = RepositoryModel(
@@ -152,17 +167,24 @@ class GitHubSyncService:
             repository = await self._repositories.upsert_from_model(project, repo_model)
             await self._sync_repo_branches(project_key=project.name, repository=repository, owner=repo.owner_login, repo=repo.name, default_branch=repo.default_branch)
             await self._sync_repo_commits(project_id=project.id, repository=repository, owner=repo.owner_login, repo=repo.name)
+            await self._uow.commit()
 
-    async def _sync_user_repos(self, project, user_login: str) -> None:
-        repos = await self._client.list_user_repos(affiliation="owner")
+    async def _sync_user_repos(self, project, user_login: str, *, integration_id) -> None:
+        repos = await self._client.list_user_repos(affiliation=self._user_repo_affiliation)
+        if self._max_repos_per_owner:
+            repos = repos[: self._max_repos_per_owner]
         for repo in repos:
-            if repo.is_fork and not self._include_forks:
+            if not self._should_sync_repo(repo):
                 continue
 
             owner_login = repo.owner_login or user_login
+            project_for_repo = project
+            if owner_login and owner_login.lower() != user_login.lower():
+                project_for_repo = await self._resolve_owner_project(owner_login, integration_id=integration_id)
+
             repo_model = RepositoryModel(
                 name=repo.name,
-                owner_name=project.name,
+                owner_name=project_for_repo.name,
                 description=repo.description,
                 default_branch=repo.default_branch,
                 topics=repo.topics,
@@ -170,20 +192,70 @@ class GitHubSyncService:
                 created_at=repo.created_at,
                 updated_at=repo.updated_at,
             )
-            repository = await self._repositories.upsert_from_model(project, repo_model)
+            repository = await self._repositories.upsert_from_model(project_for_repo, repo_model)
             await self._sync_repo_branches(
-                project_key=project.name,
+                project_key=project_for_repo.name,
                 repository=repository,
                 owner=owner_login,
                 repo=repo.name,
                 default_branch=repo.default_branch,
             )
             await self._sync_repo_commits(
-                project_id=project.id,
+                project_id=project_for_repo.id,
                 repository=repository,
                 owner=owner_login,
                 repo=repo.name,
             )
+            await self._uow.commit()
+
+    async def _resolve_owner_project(self, owner_login: str, *, integration_id):
+        key = owner_login.lower()
+        cached = self._owner_projects.get(key)
+        if cached is not None:
+            return cached
+
+        existing = await self._projects.get_by_name(owner_login, provider="github")
+        if existing is not None:
+            if existing.integration_id is None:
+                existing.integration_id = integration_id
+            self._owner_projects[key] = existing
+            return existing
+
+        now = datetime.now(UTC)
+        owner_project_model = ProjectModel(
+            id=0,
+            name=owner_login,
+            full_name=owner_login,
+            description=f"GitHub owner {owner_login}",
+            is_public=False,
+            lfs_allow=False,
+            is_favorite=False,
+            parent_id=None,
+            permissions={"read": True},
+            created_at=now,
+            updated_at=now,
+        )
+        project = await self._projects.upsert_from_model(
+            owner_project_model,
+            provider="github",
+            external_id=None,
+            integration_id=integration_id,
+        )
+        await self._uow.session.flush()
+        self._owner_projects[key] = project
+        return project
+
+    def _should_sync_repo(self, repo) -> bool:
+        if repo.is_fork and not self._include_forks:
+            return False
+
+        full_name = (repo.full_name or "").strip().lower()
+        if not full_name:
+            full_name = f"{(repo.owner_login or '').strip().lower()}/{repo.name.strip().lower()}"
+        if full_name in self._synced_repo_full_names:
+            return False
+        self._synced_repo_full_names.add(full_name)
+        return True
 
     async def _sync_repo_branches(self, *, project_key: str, repository, owner: str, repo: str, default_branch: str | None) -> None:
         branches = await self._client.list_branches(owner, repo)
@@ -220,6 +292,7 @@ class GitHubSyncService:
         size_deltas: list[SizeBucketDelta] = []
         file_deltas: list[FileRepoDayDelta] = []
 
+        processed = 0
         # API returns newest-first; store in that order.
         for commit in commits:
             await self._store_commit(
@@ -233,8 +306,17 @@ class GitHubSyncService:
                 size_deltas=size_deltas,
                 file_deltas=file_deltas,
             )
+            processed += 1
+            if processed % self._flush_every_commits == 0:
+                await self._flush_aggregate_deltas(author_deltas, hour_deltas, size_deltas, file_deltas)
+                author_deltas.clear()
+                hour_deltas.clear()
+                size_deltas.clear()
+                file_deltas.clear()
+                await self._uow.commit()
 
         await self._flush_aggregate_deltas(author_deltas, hour_deltas, size_deltas, file_deltas)
+        await self._uow.commit()
 
     async def _store_commit(
         self,
@@ -290,6 +372,9 @@ class GitHubSyncService:
             author_obj,
             committer_obj,
         )
+
+        if not created and db_commit.diff_content is not None:
+            return
 
         diff_text = ""
         try:

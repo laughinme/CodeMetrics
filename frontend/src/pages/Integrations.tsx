@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import * as api from "@/shared/api";
@@ -11,7 +11,6 @@ import { SidebarInset, SidebarProvider } from "@/shared/components/ui/sidebar";
 export default function IntegrationsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const autoSyncTriggeredRef = useRef(false);
 
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
@@ -32,8 +31,7 @@ export default function IntegrationsPage() {
   const oauthParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const oauthStatus = oauthParams.get("status");
   const oauthProvider = oauthParams.get("provider");
-  const oauthSync = oauthParams.get("sync");
-  const shouldAutoSync = oauthStatus === "connected" && oauthProvider === "github" && oauthSync === "1";
+  const justConnected = oauthStatus === "connected" && oauthProvider === "github";
 
   const connectMutation = useMutation({
     mutationFn: () => api.getGitHubAuthorizeUrl("/integrations"),
@@ -43,22 +41,14 @@ export default function IntegrationsPage() {
   });
 
   useEffect(() => {
-    if (!shouldAutoSync) {
+    if (!justConnected) {
       return;
     }
-    if (autoSyncTriggeredRef.current) {
-      return;
-    }
-    if (!github?.id) {
-      return;
-    }
-    autoSyncTriggeredRef.current = true;
-    syncMutation.mutate(github.id);
+    void integrationsQuery.refetch();
 
     const cleaned = new URLSearchParams(location.search);
     cleaned.delete("status");
     cleaned.delete("provider");
-    cleaned.delete("sync");
     const search = cleaned.toString();
     navigate(
       {
@@ -67,7 +57,7 @@ export default function IntegrationsPage() {
       },
       { replace: true }
     );
-  }, [shouldAutoSync, github?.id, location.pathname, location.search, navigate, syncMutation]);
+  }, [justConnected, integrationsQuery.refetch, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     const status = github?.last_sync_status ?? null;

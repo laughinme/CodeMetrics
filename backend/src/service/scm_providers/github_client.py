@@ -160,9 +160,13 @@ class GitHubClient:
             updated_at=_parse_github_dt(raw.get("updated_at")),
         )
 
-    async def list_user_repos(self, *, affiliation: str = "owner") -> list[GitHubRepo]:
+    async def list_user_repos(
+        self,
+        *,
+        affiliation: str = "owner,collaborator,organization_member",
+    ) -> list[GitHubRepo]:
         """
-        Personal repositories of the authenticated user (not org repos).
+        Repositories visible to the authenticated user filtered by GitHub affiliation.
         """
         repos: list[GitHubRepo] = []
         async for page in self._paginate_json(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -163,6 +164,9 @@ async def github_callback(
             url=f"{front_base}{err_path}",
             status_code=302,
         )
+    integration.last_sync_status = "queued"
+    integration.last_sync_error = None
+    integration.last_sync_at = datetime.now(UTC)
     await uow.commit()
 
     return_to = _safe_return_to(st.get("rt"))
@@ -172,5 +176,5 @@ async def github_callback(
         # Don't block OAuth callback on sync scheduling.
         pass
 
-    ok_path = _append_query_params(return_to, {"status": "connected", "provider": "github", "sync": "1"})
+    ok_path = _append_query_params(return_to, {"status": "connected", "provider": "github"})
     return RedirectResponse(url=f"{front_base}{ok_path}", status_code=302)

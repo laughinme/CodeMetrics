@@ -50,6 +50,16 @@ class Settings(BaseSettings):
     # Periodic sync of connected SCM integrations (GitHub/GitLab/etc).
     SCM_SYNC_ENABLED: bool = True
     SCM_SYNC_INTERVAL_SECONDS: int = 15 * 60
+    # GitHub sync controls (safe defaults for predictable local sync duration).
+    GITHUB_SYNC_COMMIT_WINDOW_DAYS: int = 365
+    GITHUB_SYNC_MAX_COMMIT_PAGES: int = 5
+    GITHUB_SYNC_RESYNC_OVERLAP_SECONDS: int = 60
+    GITHUB_SYNC_INCLUDE_FORKS: bool = False
+    GITHUB_SYNC_FLUSH_EVERY_COMMITS: int = 50
+    GITHUB_SYNC_MAX_REPOS_PER_OWNER: int = 20
+    # Comma-separated GitHub /user/repos affiliation filter:
+    # owner, collaborator, organization_member.
+    GITHUB_SYNC_USER_REPO_AFFILIATION: str = "owner,collaborator,organization_member"
 
     # Media settings
     MEDIA_DIR: str = 'media'

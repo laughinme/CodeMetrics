@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from uuid import UUID
 
@@ -14,6 +14,7 @@ from database.relational_db.tables.scm_integrations import ScmIntegrationInterfa
 from service.scm_sync.runner import sync_integration_background
 
 logger = logging.getLogger(__name__)
+SYNC_STALE_AFTER = timedelta(minutes=15)
 
 router = APIRouter()
 
@@ -31,6 +32,14 @@ async def sync_integration(
 
     if integration.provider != "github":
         raise HTTPException(status_code=400, detail="Unsupported provider for sync")
+
+    if integration.last_sync_status in {"queued", "running"}:
+        is_fresh = (
+            integration.last_sync_at is not None
+            and integration.last_sync_at >= datetime.now(UTC) - SYNC_STALE_AFTER
+        )
+        if is_fresh:
+            return {"status": "already_running"}
 
     # Queue background sync. We don't run the full sync in-request to avoid timeouts.
     integration.last_sync_status = "queued"
