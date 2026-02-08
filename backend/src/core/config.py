@@ -23,11 +23,25 @@ class Settings(BaseSettings):
     # API settings
     API_PORT: int = 8080
     API_HOST: str = '0.0.0.0'
+
+    # Public site URL (used for OAuth redirects back to the frontend)
+    SITE_URL: str = "http://localhost"
     
     # External API settings
     API_URL: str
     API_USERNAME: str
     API_PASSWORD: SecretStr
+
+    # OAuth / SCM integrations
+    TOKEN_ENC_KEY: SecretStr = SecretStr("")  # Fernet key (urlsafe base64); required to store OAuth tokens securely
+    OAUTH_STATE_TTL_SECONDS: int = 600
+
+    GITHUB_OAUTH_CLIENT_ID: str = ""
+    GITHUB_OAUTH_CLIENT_SECRET: SecretStr = SecretStr("")
+    # If empty, callback URL is derived as "{API public base}/api/v1/integrations/github/callback" in runtime/router.
+    GITHUB_OAUTH_REDIRECT_URI: str = ""
+    # Minimal scopes to read orgs/repos/commits; adjust per product needs.
+    GITHUB_OAUTH_SCOPES: str = "read:org repo"
     
     # Media settings
     MEDIA_DIR: str = 'media'

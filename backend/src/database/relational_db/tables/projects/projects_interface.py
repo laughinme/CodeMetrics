@@ -16,18 +16,29 @@ class ProjectInterface:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def upsert_from_model(self, model: ProjectModel) -> Project:
+    async def upsert_from_model(
+        self,
+        model: ProjectModel,
+        *,
+        provider: str = "sfera",
+        external_id: int | None = None,
+        integration_id=None,
+    ) -> Project:
         project = await self.session.scalar(
-            select(Project).where(Project.name == model.name)
+            select(Project).where(Project.provider == provider, Project.name == model.name)
         )
 
         if project is None:
             project = Project(
                 name=model.name,
                 full_name=model.full_name,
+                provider=provider,
             )
             self.session.add(project)
 
+        project.provider = provider
+        project.external_id = external_id
+        project.integration_id = integration_id
         project.full_name = model.full_name
         project.description = model.description
         project.is_public = model.is_public
@@ -40,8 +51,8 @@ class ProjectInterface:
 
         return project
     
-    async def get_by_name(self, name: str) -> Project | None:
-        stmt = select(Project).where(Project.name == name)
+    async def get_by_name(self, name: str, *, provider: str = "sfera") -> Project | None:
+        stmt = select(Project).where(Project.provider == provider, Project.name == name)
         return await self.session.scalar(stmt)
     
     async def get_by_id(self, id: int) -> Project | None:

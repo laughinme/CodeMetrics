@@ -68,6 +68,52 @@ async def auth_user(
     return user
 
 
+async def auth_user_web(
+    request: Request,
+    token_svc: Annotated[TokenService, Depends(get_token_service)],
+    user_svc: Annotated[UserService, Depends(get_user_service)],
+) -> User:
+    """
+    Auth dependency for browser flows where adding Authorization headers to navigation
+    is not possible.
+
+    Order:
+    - If Authorization: Bearer <access> is present, validate access token.
+    - Else, if refresh_token cookie is present, validate refresh token (no rotation).
+    """
+    auth = request.headers.get("Authorization") or ""
+    payload = None
+    if auth.lower().startswith("bearer "):
+        token = auth.split(" ", 1)[1]
+        payload = await token_svc.verify_access(token)
+    else:
+        refresh = request.cookies.get("refresh_token")
+        if refresh:
+            payload = await token_svc.verify_refresh(refresh)
+
+    if payload is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
+
+    user_id = payload["sub"]
+    user = await user_svc.get_user(user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
+    if user.banned:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail="Your account is banned, contact support: laughinmee@gmail.com",
+        )
+
+    token_version = payload.get("av")
+    if token_version is None or int(token_version) != int(user.auth_version):
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail="Access token expired, please sign in again",
+        )
+
+    return user
+
+
 def require_roles(*roles: SystemRole | str):
     expected = {role.value if isinstance(role, SystemRole) else str(role) for role in roles}
 

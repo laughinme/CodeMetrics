@@ -5,6 +5,7 @@ import {
   IconDashboard,
   IconFolder,
   IconInnerShadowTop,
+  IconPlugConnected,
   IconTimeline,
   IconUsers,
 } from "@tabler/icons-react"
@@ -52,6 +53,11 @@ const data = {
       title: "Insights",
       url: "/insights",
       icon: IconChartBar,
+    },
+    {
+      title: "Integrations",
+      url: "/integrations",
+      icon: IconPlugConnected,
     },
   ],
 }

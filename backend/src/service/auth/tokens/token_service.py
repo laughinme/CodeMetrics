@@ -134,3 +134,15 @@ class TokenService:
             return None
 
         return payload
+
+    async def verify_refresh(self, refresh_token: str) -> dict[str, int | str] | None:
+        """
+        Verify refresh token without rotating/revoking it.
+
+        Useful for GET endpoints that need to identify the user in browser navigation,
+        where Authorization headers are unavailable.
+        """
+        payload = await self._verify_token(refresh_token)
+        if payload is None or payload["typ"] != "refresh":
+            return None
+        return payload

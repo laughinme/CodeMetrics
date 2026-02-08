@@ -10,6 +10,7 @@ def get_v1_router() -> APIRouter:
     # from .activity import get_activity_router
     from .developers import get_developers_router
     from .insights import router as insights_router
+    from .integrations import get_integrations_router
     
     router = APIRouter(prefix='/v1')
 
@@ -21,5 +22,6 @@ def get_v1_router() -> APIRouter:
     # router.include_router(get_activity_router())
     router.include_router(get_developers_router())
     router.include_router(insights_router)
+    router.include_router(get_integrations_router())
     
     return router

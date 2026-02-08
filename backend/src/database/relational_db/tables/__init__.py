@@ -10,3 +10,4 @@ from .projects import *
 from .repositories import *
 from .aggr_commits import *
 from .aggr_files import *
+from .scm_integrations import *

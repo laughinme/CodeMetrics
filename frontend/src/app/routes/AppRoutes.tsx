@@ -8,6 +8,7 @@ import ProjectsPage from "@/pages/Projects";
 import TimelinePage from "@/pages/Timeline";
 import ProjectDetailPage from "@/pages/ProjectDetailPage";
 import RepoDetailPage from "@/pages/RepoDetailPage";
+import IntegrationsPage from "@/pages/Integrations";
 import { useAuth } from "@/app/providers/auth/useAuth";
 
 const RequireAuth = () => {
@@ -59,7 +60,8 @@ export const routes: RouteObject[] = [
       { path: "repositories", element: <Navigate to="/timeline" replace /> },
       { path: "developers", element: <DevelopersPage /> },
       { path: "developers/:developerId", element: <DeveloperProfilePage /> },
-      { path: "insights", element: <InsightsPage /> }
+      { path: "insights", element: <InsightsPage /> },
+      { path: "integrations", element: <IntegrationsPage /> }
     ]
   },
   {

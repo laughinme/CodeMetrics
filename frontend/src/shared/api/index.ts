@@ -1,5 +1,6 @@
 import apiProtected, { apiPublic } from "./axiosInstance";
 import type { AuthCredentials, AuthTokens, AuthUser } from "@/entities/auth/model";
+export * from "./integrations";
 
 export const registerUser = async (credentials: AuthCredentials): Promise<AuthTokens> => {
   const response = await apiPublic.post<AuthTokens>("/auth/register", credentials, {
