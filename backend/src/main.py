@@ -24,7 +24,8 @@ async def lifespan(app: FastAPI):
         await wait_for_db()
         
         if scheduler.state != STATE_RUNNING:
-            scheduler.start()
+            # scheduler.start()
+            pass
             
         await FastAPILimiter.init(redis)
         yield
