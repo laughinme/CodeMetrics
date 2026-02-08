@@ -14,7 +14,7 @@ export type ScmIntegration = {
 };
 
 export const listIntegrations = async (): Promise<ScmIntegration[]> => {
-  const response = await apiProtected.get<ScmIntegration[]>("/integrations/");
+  const response = await apiProtected.get<ScmIntegration[]>("/integrations");
   return response.data;
 };
 

@@ -8,10 +8,10 @@ from database.relational_db.tables.scm_integrations import ScmIntegrationInterfa
 from domain.scm import ScmIntegrationOut
 
 
-router = APIRouter()
+router = APIRouter(prefix="/integrations", tags=["integrations"])
 
 
-@router.get("/", response_model=list[ScmIntegrationOut])
+@router.get("", response_model=list[ScmIntegrationOut])
 async def list_integrations(
     user: Annotated[User, Depends(auth_user)],
     uow: Annotated[UoW, Depends(get_uow)],
