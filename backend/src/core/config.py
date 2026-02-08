@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     API_URL: str
     API_USERNAME: str
     API_PASSWORD: SecretStr
+    EXTERNAL_API_SYNC_ENABLED: bool = True
 
     # OAuth / SCM integrations
     TOKEN_ENC_KEY: SecretStr = SecretStr("")  # Fernet key (urlsafe base64); required to store OAuth tokens securely
@@ -42,7 +43,14 @@ class Settings(BaseSettings):
     GITHUB_OAUTH_REDIRECT_URI: str = ""
     # Minimal scopes to read orgs/repos/commits; adjust per product needs.
     GITHUB_OAUTH_SCOPES: str = "read:org repo"
-    
+
+    # Scheduler / auto-sync
+    # If unset, defaults to enabled in dev and disabled in prod.
+    SCHEDULER_ENABLED: bool | None = None
+    # Periodic sync of connected SCM integrations (GitHub/GitLab/etc).
+    SCM_SYNC_ENABLED: bool = True
+    SCM_SYNC_INTERVAL_SECONDS: int = 15 * 60
+
     # Media settings
     MEDIA_DIR: str = 'media'
     
@@ -100,6 +108,9 @@ class Settings(BaseSettings):
             raise ValueError(
                 "JWT keys are required. Provide JWT_PRIVATE_KEY/JWT_PUBLIC_KEY or JWT_*_PATH."
             )
+
+        if self.SCHEDULER_ENABLED is None:
+            self.SCHEDULER_ENABLED = self.APP_STAGE == "dev"
         return self
 
 config = Settings() # pyright: ignore[reportCallIssue]

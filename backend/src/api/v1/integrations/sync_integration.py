@@ -1,19 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import logging
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 
-from datetime import datetime, UTC
-
-from core.secrets import decrypt_str, SecretEncryptionError
 from core.security import auth_user
 from database.relational_db import UoW, User, get_uow
 from database.relational_db.tables.scm_integrations import ScmIntegrationInterface
-from service.scm_providers.github_client import GitHubClient
-from service.scm_sync.github_sync import GitHubSyncService
+from service.scm_sync.runner import sync_integration_background
 
 logger = logging.getLogger(__name__)
 
@@ -34,26 +32,16 @@ async def sync_integration(
     if integration.provider != "github":
         raise HTTPException(status_code=400, detail="Unsupported provider for sync")
 
-    try:
-        access_token = decrypt_str(integration.access_token_enc)
-    except SecretEncryptionError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    # Queue background sync. We don't run the full sync in-request to avoid timeouts.
+    integration.last_sync_status = "queued"
+    integration.last_sync_error = None
+    integration.last_sync_at = datetime.now(UTC)
+    await uow.commit()
 
     try:
-        client = GitHubClient(access_token)
-        sync = GitHubSyncService(client=client, uow=uow)
-        await sync.sync_orgs(integration_id=integration.id)
+        asyncio.create_task(sync_integration_background(integration.id))
+    except Exception:
+        logger.exception("Failed to schedule integration sync")
+        raise HTTPException(status_code=500, detail="Failed to schedule sync")
 
-        integration.last_sync_status = "ok"
-        integration.last_sync_error = None
-        integration.last_sync_at = datetime.now(UTC)
-    except Exception as exc:
-        logger.exception("Integration sync failed")
-        integration.last_sync_status = "error"
-        integration.last_sync_error = str(exc)[:2000]
-        integration.last_sync_at = datetime.now(UTC)
-        raise
-    finally:
-        await uow.commit()
-
-    return {"status": "ok"}
+    return {"status": "started"}

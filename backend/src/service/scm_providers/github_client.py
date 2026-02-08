@@ -135,6 +135,64 @@ class GitHubClient:
                 )
         return orgs
 
+    @dataclass(frozen=True, slots=True)
+    class GitHubMe:
+        id: int
+        login: str
+        name: str | None
+        bio: str | None
+        created_at: datetime | None
+        updated_at: datetime | None
+
+    async def get_me(self) -> "GitHubClient.GitHubMe":
+        resp = await self._get(f"{self.API_BASE}/user")
+        raw = resp.json() or {}
+        user_id = raw.get("id")
+        login = raw.get("login")
+        if user_id is None or not login:
+            raise GitHubAPIError("Failed to fetch /user from GitHub")
+        return GitHubClient.GitHubMe(
+            id=int(user_id),
+            login=str(login),
+            name=raw.get("name"),
+            bio=raw.get("bio"),
+            created_at=_parse_github_dt(raw.get("created_at")),
+            updated_at=_parse_github_dt(raw.get("updated_at")),
+        )
+
+    async def list_user_repos(self, *, affiliation: str = "owner") -> list[GitHubRepo]:
+        """
+        Personal repositories of the authenticated user (not org repos).
+        """
+        repos: list[GitHubRepo] = []
+        async for page in self._paginate_json(
+            f"{self.API_BASE}/user/repos",
+            params={
+                "per_page": 100,
+                "sort": "pushed",
+                "direction": "desc",
+                "visibility": "all",
+                "affiliation": affiliation,
+            },
+        ):
+            for raw in page:
+                owner = raw.get("owner") or {}
+                repos.append(
+                    GitHubRepo(
+                        id=int(raw.get("id")),
+                        name=str(raw.get("name")),
+                        full_name=str(raw.get("full_name")),
+                        owner_login=str(owner.get("login") or ""),
+                        description=raw.get("description"),
+                        default_branch=raw.get("default_branch"),
+                        topics=list(raw.get("topics") or []),
+                        is_fork=bool(raw.get("fork")),
+                        created_at=_parse_github_dt(raw.get("created_at")),
+                        updated_at=_parse_github_dt(raw.get("pushed_at") or raw.get("updated_at")),
+                    )
+                )
+        return repos
+
     async def list_org_repos(self, org_login: str) -> list[GitHubRepo]:
         repos: list[GitHubRepo] = []
         async for page in self._paginate_json(
@@ -222,4 +280,3 @@ class GitHubClient:
             accept="application/vnd.github.v3.diff",
         )
         return resp.text or ""
-

@@ -15,7 +15,7 @@ from scheduler import init_scheduler
 
 config = Settings() # pyright: ignore[reportCallIssue]
 configure_logging()
-scheduler = init_scheduler(config.API_URL)
+scheduler = init_scheduler(config)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,8 +24,8 @@ async def lifespan(app: FastAPI):
         await wait_for_db()
         
         if scheduler.state != STATE_RUNNING:
-            # scheduler.start()
-            pass
+            if config.SCHEDULER_ENABLED:
+                scheduler.start()
             
         await FastAPILimiter.init(redis)
         yield

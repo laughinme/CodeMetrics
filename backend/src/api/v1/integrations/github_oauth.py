@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from starlette.responses import RedirectResponse
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlencode, urlsplit, urlunsplit, parse_qsl
 
 from core.config import config
 from core.security import auth_user, auth_user_web
@@ -14,6 +15,7 @@ from database.relational_db import UoW, User, get_uow
 from database.relational_db.tables.scm_integrations import ScmIntegrationInterface
 from service.scm_integrations import GitHubOAuthService, OAuthError
 from core.secrets import SecretEncryptionError
+from service.scm_sync.runner import sync_integration_background
 
 
 router = APIRouter(prefix="/github")
@@ -35,6 +37,13 @@ def _safe_return_to(value: str | None) -> str:
     if "://" in v:
         return "/integrations"
     return v
+
+
+def _append_query_params(path: str, params: dict[str, str]) -> str:
+    parts = urlsplit(path)
+    q = dict(parse_qsl(parts.query, keep_blank_values=True))
+    q.update({k: v for k, v in params.items() if v is not None})
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q), parts.fragment))
 
 
 @router.get("/authorize")
@@ -97,18 +106,24 @@ async def github_callback(
 
     if error:
         detail = (error_description or error).strip()
+        err_path = _append_query_params(
+            "/integrations",
+            {"status": "error", "reason": detail},
+        )
         return RedirectResponse(
-            url=f"{front_base}/integrations?status=error&reason={quote_plus(detail)}",
+            url=f"{front_base}{err_path}",
             status_code=302,
         )
 
     if not code or not state:
-        return RedirectResponse(url=f"{front_base}/integrations?status=error&reason=missing_code_state", status_code=302)
+        err_path = _append_query_params("/integrations", {"status": "error", "reason": "missing_code_state"})
+        return RedirectResponse(url=f"{front_base}{err_path}", status_code=302)
 
     svc = GitHubOAuthService(redis)
     st = await svc.consume_state(state)
     if not st:
-        return RedirectResponse(url=f"{front_base}/integrations?status=error&reason=bad_state", status_code=302)
+        err_path = _append_query_params("/integrations", {"status": "error", "reason": "bad_state"})
+        return RedirectResponse(url=f"{front_base}{err_path}", status_code=302)
 
     # Callback is public; we rely on state saved during /authorize call.
     redirect_uri = st.get("ru") or None
@@ -117,20 +132,22 @@ async def github_callback(
         tokens = await svc.exchange_code(code=code, redirect_uri=redirect_uri)
         gh_user = await svc.fetch_user(tokens.access_token)
     except OAuthError as exc:
+        err_path = _append_query_params("/integrations", {"status": "error", "reason": str(exc)})
         return RedirectResponse(
-            url=f"{front_base}/integrations?status=error&reason={quote_plus(str(exc))}",
+            url=f"{front_base}{err_path}",
             status_code=302,
         )
 
     try:
         user_id = UUID(st["uid"])
     except Exception:
-        return RedirectResponse(url=f"{front_base}/integrations?status=error&reason=bad_user", status_code=302)
+        err_path = _append_query_params("/integrations", {"status": "error", "reason": "bad_user"})
+        return RedirectResponse(url=f"{front_base}{err_path}", status_code=302)
 
     # Persist integration
     repo = ScmIntegrationInterface(uow.session)
     try:
-        await repo.upsert(
+        integration = await repo.upsert(
             user_id=user_id,
             provider="github",
             external_id=gh_user.id,
@@ -141,11 +158,19 @@ async def github_callback(
             scopes=tokens.scope,
         )
     except SecretEncryptionError as exc:
+        err_path = _append_query_params("/integrations", {"status": "error", "reason": str(exc)})
         return RedirectResponse(
-            url=f"{front_base}/integrations?status=error&reason={quote_plus(str(exc))}",
+            url=f"{front_base}{err_path}",
             status_code=302,
         )
     await uow.commit()
 
     return_to = _safe_return_to(st.get("rt"))
-    return RedirectResponse(url=f"{front_base}{return_to}?status=connected&provider=github", status_code=302)
+    try:
+        asyncio.create_task(sync_integration_background(integration.id))
+    except Exception:
+        # Don't block OAuth callback on sync scheduling.
+        pass
+
+    ok_path = _append_query_params(return_to, {"status": "connected", "provider": "github", "sync": "1"})
+    return RedirectResponse(url=f"{front_base}{ok_path}", status_code=302)

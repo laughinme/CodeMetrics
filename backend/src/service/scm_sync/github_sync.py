@@ -61,7 +61,43 @@ class GitHubSyncService:
         self._commit_files = CommitFileInterface(session)
         self._aggregates = AggregateMetricsInterface(session)
 
-    async def sync_orgs(self, *, integration_id) -> None:
+    async def sync_user_and_orgs(self, *, integration_id) -> None:
+        """
+        Sync both:
+        - personal repositories of the authenticated user
+        - org repositories for orgs the user belongs to
+        """
+        # 1) Personal repos
+        try:
+            me = await self._client.get_me()
+            me_project_model = ProjectModel(
+                id=me.id,
+                name=me.login,
+                full_name=me.name or me.login,
+                description=me.bio,
+                is_public=False,
+                lfs_allow=False,
+                is_favorite=False,
+                parent_id=None,
+                permissions={"read": True},
+                created_at=me.created_at,
+                updated_at=me.updated_at,
+            )
+            me_project = await self._projects.upsert_from_model(
+                me_project_model,
+                provider="github",
+                external_id=me.id,
+                integration_id=integration_id,
+            )
+            await self._uow.session.flush()
+            await self._sync_user_repos(me_project, me.login)
+            await self._uow.commit()
+        except GitHubAPIError as exc:
+            logger.error("Failed to sync user repos: %s", exc)
+        except Exception:
+            logger.exception("Unexpected error while syncing user repos")
+
+        # 2) Org repos
         orgs = await self._client.list_orgs()
         for org in orgs:
             project_model = ProjectModel(
@@ -93,6 +129,10 @@ class GitHubSyncService:
             except Exception:
                 logger.exception("Unexpected error while syncing org %s", org.login)
 
+    async def sync_orgs(self, *, integration_id) -> None:
+        # Backward-compatible alias.
+        await self.sync_user_and_orgs(integration_id=integration_id)
+
     async def _sync_org_repos(self, project, org_login: str) -> None:
         repos = await self._client.list_org_repos(org_login)
         for repo in repos:
@@ -112,6 +152,38 @@ class GitHubSyncService:
             repository = await self._repositories.upsert_from_model(project, repo_model)
             await self._sync_repo_branches(project_key=project.name, repository=repository, owner=repo.owner_login, repo=repo.name, default_branch=repo.default_branch)
             await self._sync_repo_commits(project_id=project.id, repository=repository, owner=repo.owner_login, repo=repo.name)
+
+    async def _sync_user_repos(self, project, user_login: str) -> None:
+        repos = await self._client.list_user_repos(affiliation="owner")
+        for repo in repos:
+            if repo.is_fork and not self._include_forks:
+                continue
+
+            owner_login = repo.owner_login or user_login
+            repo_model = RepositoryModel(
+                name=repo.name,
+                owner_name=project.name,
+                description=repo.description,
+                default_branch=repo.default_branch,
+                topics=repo.topics,
+                permissions={"read": True},
+                created_at=repo.created_at,
+                updated_at=repo.updated_at,
+            )
+            repository = await self._repositories.upsert_from_model(project, repo_model)
+            await self._sync_repo_branches(
+                project_key=project.name,
+                repository=repository,
+                owner=owner_login,
+                repo=repo.name,
+                default_branch=repo.default_branch,
+            )
+            await self._sync_repo_commits(
+                project_id=project.id,
+                repository=repository,
+                owner=owner_login,
+                repo=repo.name,
+            )
 
     async def _sync_repo_branches(self, *, project_key: str, repository, owner: str, repo: str, default_branch: str | None) -> None:
         branches = await self._client.list_branches(owner, repo)
@@ -329,4 +401,3 @@ class GitHubSyncService:
         if churn <= 100:
             return SizeBucket.FIFTY_ONE_HUNDRED
         return SizeBucket.HUNDRED_PLUS
-

@@ -1,12 +1,18 @@
 import type { CSSProperties } from "react";
 
+import { useEffect, useMemo, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router-dom";
 import * as api from "@/shared/api";
 import { AppSidebar } from "@/shared/components/app-sidebar";
 import { SiteHeader } from "@/shared/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/shared/components/ui/sidebar";
 
 export default function IntegrationsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const autoSyncTriggeredRef = useRef(false);
+
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
     queryFn: api.listIntegrations,
@@ -23,12 +29,56 @@ export default function IntegrationsPage() {
   const integrations = integrationsQuery.data ?? [];
   const github = integrations.find((i) => i.provider === "github") ?? null;
 
+  const oauthParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const oauthStatus = oauthParams.get("status");
+  const oauthProvider = oauthParams.get("provider");
+  const oauthSync = oauthParams.get("sync");
+  const shouldAutoSync = oauthStatus === "connected" && oauthProvider === "github" && oauthSync === "1";
+
   const connectMutation = useMutation({
     mutationFn: () => api.getGitHubAuthorizeUrl("/integrations"),
     onSuccess: (url) => {
       window.location.href = url;
     },
   });
+
+  useEffect(() => {
+    if (!shouldAutoSync) {
+      return;
+    }
+    if (autoSyncTriggeredRef.current) {
+      return;
+    }
+    if (!github?.id) {
+      return;
+    }
+    autoSyncTriggeredRef.current = true;
+    syncMutation.mutate(github.id);
+
+    const cleaned = new URLSearchParams(location.search);
+    cleaned.delete("status");
+    cleaned.delete("provider");
+    cleaned.delete("sync");
+    const search = cleaned.toString();
+    navigate(
+      {
+        pathname: location.pathname,
+        search: search ? `?${search}` : "",
+      },
+      { replace: true }
+    );
+  }, [shouldAutoSync, github?.id, location.pathname, location.search, navigate, syncMutation]);
+
+  useEffect(() => {
+    const status = github?.last_sync_status ?? null;
+    if (!status || (status !== "running" && status !== "queued")) {
+      return;
+    }
+    const handle = window.setInterval(() => {
+      integrationsQuery.refetch();
+    }, 2000);
+    return () => window.clearInterval(handle);
+  }, [github?.last_sync_status, integrationsQuery]);
 
   return (
     <SidebarProvider
